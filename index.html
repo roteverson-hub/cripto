@@ -20,6 +20,36 @@
     <pre id="debug" class="debug"></pre>
   </div>
 
-  <script src="api/challenge.js"></script>
+  <script>
+    const APPS_PROXY_URL = "/api/challenge"; // proxy no Vercel
+
+    document.getElementById('loadChallenge').addEventListener('click', async () => {
+      try {
+        const response = await fetch(APPS_PROXY_URL);
+        const data = await response.json();
+
+        // Mostra tema
+        document.getElementById('theme').textContent = `Tema: ${data.theme}`;
+
+        // Monta palavras cifradas e inputs
+        const challengeDiv = document.getElementById('challenge');
+        challengeDiv.innerHTML = '';
+        data.words.forEach((word, index) => {
+          const div = document.createElement('div');
+          div.innerHTML = `
+            <p>${word}</p>
+            <input type="text" id="input-${index}" placeholder="Digite a palavra correta">
+          `;
+          challengeDiv.appendChild(div);
+        });
+
+        // Debug JSON
+        document.getElementById('debug').textContent = JSON.stringify(data, null, 2);
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao carregar desafio do dia.");
+      }
+    });
+  </script>
 </body>
 </html>
