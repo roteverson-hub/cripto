@@ -32,22 +32,46 @@
     <!-- 🔹 Tela do Jogo -->
     <div id="game-section" style="display:none;">
       <h1>CRIPTO3 – Desafio Diário</h1>
+      <p id="welcome"></p>
       <p id="theme" class="theme-text"></p>
       <div id="challenge" class="challenge-container"></div>
       <button id="loadChallenge" class="btn">Carregar Desafio do Dia</button>
       <button id="submitAnswers" class="btn" style="display: none;">Enviar Respostas</button>
       <p id="result" class="result-message"></p>
+      <button id="logout" class="btn" style="background:#d9534f; display:none;">Sair</button>
     </div>
   </div>
 
   <script>
-    // 🔹 URL do Apps Script
-    const APPS_PROXY_URL = "/api/challenge";
-    const APPS_AUTH_URL = "/api/auth"; // Novo endpoint de login/registro
+    // 🔹 Endpoints
+    const CHALLENGE_URL = "/api/challenge";
+    const LOGIN_URL = "/api/login";
+    const REGISTER_URL = "/api/register";
+
     let originalWords = [];
 
     // =========================
-    // 🔹 TROCA DE TELAS
+    // 🔹 Persistência de Login
+    // =========================
+    function checkLogin() {
+      const user = localStorage.getItem("user");
+      if (user) {
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("register-section").style.display = "none";
+        document.getElementById("game-section").style.display = "block";
+        document.getElementById("welcome").textContent = `👋 Bem-vindo, ${user}!`;
+        document.getElementById("logout").style.display = "block";
+      }
+    }
+    checkLogin();
+
+    document.getElementById("logout").addEventListener("click", () => {
+      localStorage.removeItem("user");
+      location.reload();
+    });
+
+    // =========================
+    // 🔹 Troca de Telas
     // =========================
     document.getElementById("goRegister").addEventListener("click", () => {
       document.getElementById("login-section").style.display = "none";
@@ -60,17 +84,17 @@
     });
 
     // =========================
-    // 🔹 REGISTRO
+    // 🔹 Registro
     // =========================
     document.getElementById("btnRegister").addEventListener("click", async () => {
       const username = document.getElementById("register-username").value;
       const password = document.getElementById("register-password").value;
 
       try {
-        const res = await fetch(APPS_AUTH_URL, {
+        const res = await fetch(REGISTER_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "register", username, password })
+          body: JSON.stringify({ username, password })
         });
         const data = await res.json();
         document.getElementById("registerMsg").textContent = data.message;
@@ -85,24 +109,27 @@
     });
 
     // =========================
-    // 🔹 LOGIN
+    // 🔹 Login
     // =========================
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const username = document.getElementById("login-username").value;
       const password = document.getElementById("login-password").value;
 
       try {
-        const res = await fetch(APPS_AUTH_URL, {
+        const res = await fetch(LOGIN_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "login", username, password })
+          body: JSON.stringify({ username, password })
         });
         const data = await res.json();
         document.getElementById("loginMsg").textContent = data.message;
 
         if (data.success) {
+          localStorage.setItem("user", username);
           document.getElementById("login-section").style.display = "none";
           document.getElementById("game-section").style.display = "block";
+          document.getElementById("welcome").textContent = `👋 Bem-vindo, ${username}!`;
+          document.getElementById("logout").style.display = "block";
         }
       } catch (err) {
         document.getElementById("loginMsg").textContent = "Erro ao logar.";
@@ -110,11 +137,11 @@
     });
 
     // =========================
-    // 🔹 CARREGAR DESAFIO
+    // 🔹 Carregar Desafio
     // =========================
     document.getElementById('loadChallenge').addEventListener('click', async () => {
       try {
-        const response = await fetch(APPS_PROXY_URL);
+        const response = await fetch(CHALLENGE_URL);
         const data = await response.json();
 
         document.getElementById('theme').textContent = `Tema: ${data.theme}`;
@@ -143,7 +170,7 @@
     });
 
     // =========================
-    // 🔹 VERIFICAR RESPOSTAS
+    // 🔹 Verificar Respostas
     // =========================
     document.getElementById('submitAnswers').addEventListener('click', () => {
       let correctCount = 0;
