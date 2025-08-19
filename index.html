@@ -38,7 +38,26 @@
       <button id="loadChallenge" class="btn">Carregar Desafio do Dia</button>
       <button id="submitAnswers" class="btn" style="display: none;">Enviar Respostas</button>
       <p id="result" class="result-message"></p>
-      <button id="logout" class="btn" style="background:#d9534f; display:none;">Sair</button>
+      <button id="logout" class="btn btn-danger" style="display:none;">Sair</button>
+
+      <!-- 🔹 Rankings -->
+      <div id="ranking-section" style="margin-top:30px; display:none;">
+        <h2>🏆 Ranking Diário</h2>
+        <table id="daily-ranking" class="ranking-table">
+          <thead>
+            <tr><th>Pos</th><th>Usuário</th><th>Pontos</th><th>Tentativas</th><th>Tempo</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+
+        <h2 style="margin-top:20px;">🌍 Ranking Global</h2>
+        <table id="global-ranking" class="ranking-table">
+          <thead>
+            <tr><th>Pos</th><th>Usuário</th><th>Pontos</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -47,8 +66,11 @@
     const CHALLENGE_URL = "/api/challenge";
     const LOGIN_URL = "/api/login";
     const REGISTER_URL = "/api/register";
+    const SUBMIT_URL = "/api/submit";
+    const RANKING_URL = "/api/ranking";
 
     let originalWords = [];
+    let startTime = null;
 
     // =========================
     // 🔹 Persistência de Login
@@ -61,6 +83,7 @@
         document.getElementById("game-section").style.display = "block";
         document.getElementById("welcome").textContent = `👋 Bem-vindo, ${user}!`;
         document.getElementById("logout").style.display = "block";
+        loadRanking();
       }
     }
     checkLogin();
@@ -130,6 +153,7 @@
           document.getElementById("game-section").style.display = "block";
           document.getElementById("welcome").textContent = `👋 Bem-vindo, ${username}!`;
           document.getElementById("logout").style.display = "block";
+          loadRanking();
         }
       } catch (err) {
         document.getElementById("loginMsg").textContent = "Erro ao logar.";
@@ -162,6 +186,8 @@
 
         document.getElementById('loadChallenge').style.display = "none";
         document.getElementById('submitAnswers').style.display = "block";
+        document.getElementById('result').textContent = "";
+        startTime = Date.now();
 
       } catch (err) {
         console.error(err);
@@ -170,9 +196,9 @@
     });
 
     // =========================
-    // 🔹 Verificar Respostas
+    // 🔹 Verificar Respostas + Enviar Ranking
     // =========================
-    document.getElementById('submitAnswers').addEventListener('click', () => {
+    document.getElementById('submitAnswers').addEventListener('click', async () => {
       let correctCount = 0;
 
       originalWords.forEach((answer, index) => {
@@ -190,6 +216,10 @@
       });
 
       const resultMsg = document.getElementById("result");
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const attempts = originalWords.length;
+      const points = correctCount;
+
       if (correctCount === originalWords.length) {
         resultMsg.textContent = "🎉 Parabéns! Você acertou todas!";
         resultMsg.style.color = "#4CAF50";
@@ -197,7 +227,58 @@
         resultMsg.textContent = `Você acertou ${correctCount} de ${originalWords.length}.`;
         resultMsg.style.color = "#FFB300";
       }
+
+      // 🔹 Enviar resultado ao backend
+      try {
+        const username = localStorage.getItem("user");
+        await fetch(SUBMIT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username,
+            challengeDate: new Date().toISOString().split("T")[0],
+            points,
+            attempts,
+            elapsed
+          })
+        });
+        loadRanking();
+      } catch (err) {
+        console.error("Erro ao enviar resultado:", err);
+      }
     });
+
+    // =========================
+    // 🔹 Carregar Ranking
+    // =========================
+    async function loadRanking() {
+      try {
+        const res = await fetch(RANKING_URL);
+        const data = await res.json();
+
+        document.getElementById("ranking-section").style.display = "block";
+
+        // Ranking Diário
+        const dailyBody = document.querySelector("#daily-ranking tbody");
+        dailyBody.innerHTML = "";
+        (data.daily || []).forEach((row, idx) => {
+          dailyBody.innerHTML += `<tr>
+            <td>${idx+1}</td><td>${row.username}</td><td>${row.points}</td><td>${row.attempts}</td><td>${row.elapsed}s</td>
+          </tr>`;
+        });
+
+        // Ranking Global
+        const globalBody = document.querySelector("#global-ranking tbody");
+        globalBody.innerHTML = "";
+        (data.global || []).forEach((row, idx) => {
+          globalBody.innerHTML += `<tr>
+            <td>${idx+1}</td><td>${row.username}</td><td>${row.points}</td>
+          </tr>`;
+        });
+      } catch (err) {
+        console.error("Erro ao carregar ranking:", err);
+      }
+    }
   </script>
 </body>
 </html>
