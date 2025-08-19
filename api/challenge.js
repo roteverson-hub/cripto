@@ -1,6 +1,6 @@
 // api/challenge.js
 export default async function handler(req, res) {
-  const APPS_SCRIPT_URL = "SUA_URL_DO_WEBAPP_DO_APPSCRIPT"; // substitua pela URL do doGet
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzwXTsbKs8pOqyhFTKk-mtt8IbuiK2hwoBFJ7PsjtzOTMadRSVpDzuYQGGzGikm1fyb/exec"; // substitua pela URL do doGet
 
   try {
     const response = await fetch(APPS_SCRIPT_URL);
