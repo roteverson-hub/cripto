@@ -5,83 +5,120 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cripto3 - Desafio Diário</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #121212;
-      color: #f1f1f1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .container {
-      max-width: 500px;
-      width: 100%;
-      background: #1e1e1e;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    h1 { text-align: center; margin-bottom: 20px; }
-    .theme-text { font-weight: bold; margin-bottom: 15px; text-align: center; }
-    .challenge-word {
-      margin-bottom: 15px;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
-    }
-    .btn {
-      width: 100%;
-      padding: 12px;
-      background: #3a86ff;
-      color: #fff;
-      font-size: 16px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-    .btn:hover { background: #265ed3; }
-    .correct { color: #4CAF50; font-weight: bold; }
-    .wrong { color: #FF5252; font-weight: bold; }
-    .result-message {
-      margin-top: 15px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-    }
-  </style>
 </head>
 <body>
   <div class="container">
-    <h1>CRIPTO3 – Desafio Diário</h1>
-    <p id="theme" class="theme-text"></p>
 
-    <div id="challenge" class="challenge-container"></div>
+    <!-- 🔹 Tela de Login -->
+    <div id="login-section">
+      <h1>Login</h1>
+      <input type="text" id="login-username" placeholder="Usuário">
+      <input type="password" id="login-password" placeholder="Senha">
+      <button class="btn" id="btnLogin">Entrar</button>
+      <p>Ainda não tem conta? <a href="#" id="goRegister">Registrar</a></p>
+      <p id="loginMsg" class="result-message"></p>
+    </div>
 
-    <button id="loadChallenge" class="btn">Carregar Desafio do Dia</button>
-    <button id="submitAnswers" class="btn" style="display: none;">Enviar Respostas</button>
+    <!-- 🔹 Tela de Registro -->
+    <div id="register-section" style="display:none;">
+      <h1>Registrar</h1>
+      <input type="text" id="register-username" placeholder="Usuário">
+      <input type="password" id="register-password" placeholder="Senha">
+      <button class="btn" id="btnRegister">Criar Conta</button>
+      <p>Já tem conta? <a href="#" id="goLogin">Login</a></p>
+      <p id="registerMsg" class="result-message"></p>
+    </div>
 
-    <p id="result" class="result-message"></p>
+    <!-- 🔹 Tela do Jogo -->
+    <div id="game-section" style="display:none;">
+      <h1>CRIPTO3 – Desafio Diário</h1>
+      <p id="theme" class="theme-text"></p>
+      <div id="challenge" class="challenge-container"></div>
+      <button id="loadChallenge" class="btn">Carregar Desafio do Dia</button>
+      <button id="submitAnswers" class="btn" style="display: none;">Enviar Respostas</button>
+      <p id="result" class="result-message"></p>
+    </div>
   </div>
 
   <script>
+    // 🔹 URL do Apps Script
     const APPS_PROXY_URL = "/api/challenge";
+    const APPS_AUTH_URL = "/api/auth"; // Novo endpoint de login/registro
     let originalWords = [];
 
+    // =========================
+    // 🔹 TROCA DE TELAS
+    // =========================
+    document.getElementById("goRegister").addEventListener("click", () => {
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("register-section").style.display = "block";
+    });
+
+    document.getElementById("goLogin").addEventListener("click", () => {
+      document.getElementById("register-section").style.display = "none";
+      document.getElementById("login-section").style.display = "block";
+    });
+
+    // =========================
+    // 🔹 REGISTRO
+    // =========================
+    document.getElementById("btnRegister").addEventListener("click", async () => {
+      const username = document.getElementById("register-username").value;
+      const password = document.getElementById("register-password").value;
+
+      try {
+        const res = await fetch(APPS_AUTH_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "register", username, password })
+        });
+        const data = await res.json();
+        document.getElementById("registerMsg").textContent = data.message;
+
+        if (data.success) {
+          document.getElementById("register-section").style.display = "none";
+          document.getElementById("login-section").style.display = "block";
+        }
+      } catch (err) {
+        document.getElementById("registerMsg").textContent = "Erro ao registrar.";
+      }
+    });
+
+    // =========================
+    // 🔹 LOGIN
+    // =========================
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+
+      try {
+        const res = await fetch(APPS_AUTH_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "login", username, password })
+        });
+        const data = await res.json();
+        document.getElementById("loginMsg").textContent = data.message;
+
+        if (data.success) {
+          document.getElementById("login-section").style.display = "none";
+          document.getElementById("game-section").style.display = "block";
+        }
+      } catch (err) {
+        document.getElementById("loginMsg").textContent = "Erro ao logar.";
+      }
+    });
+
+    // =========================
+    // 🔹 CARREGAR DESAFIO
+    // =========================
     document.getElementById('loadChallenge').addEventListener('click', async () => {
       try {
         const response = await fetch(APPS_PROXY_URL);
         const data = await response.json();
 
         document.getElementById('theme').textContent = `Tema: ${data.theme}`;
-        originalWords = data.original; // Guardamos as respostas corretas
+        originalWords = data.original;
 
         const challengeDiv = document.getElementById('challenge');
         challengeDiv.innerHTML = '';
@@ -96,7 +133,6 @@
           challengeDiv.appendChild(div);
         });
 
-        // Esconde botão inicial e mostra botão enviar
         document.getElementById('loadChallenge').style.display = "none";
         document.getElementById('submitAnswers').style.display = "block";
 
@@ -106,6 +142,9 @@
       }
     });
 
+    // =========================
+    // 🔹 VERIFICAR RESPOSTAS
+    // =========================
     document.getElementById('submitAnswers').addEventListener('click', () => {
       let correctCount = 0;
 
