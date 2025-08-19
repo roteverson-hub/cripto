@@ -1,9 +1,7 @@
 /* ==================== */
 /* Reset & Base Styles  */
 /* ==================== */
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -21,7 +19,7 @@ body {
 /* Container Principal  */
 /* ==================== */
 .container {
-  max-width: 700px;
+  max-width: 900px;
   width: 100%;
   background: #1e1e1e;
   padding: 2rem;
@@ -46,10 +44,7 @@ input {
   outline: none;
   transition: border 0.2s ease;
 }
-
-input:focus {
-  border: 1px solid #1E88E5;
-}
+input:focus { border: 1px solid #1E88E5; }
 
 /* ==================== */
 /* Botões               */
@@ -66,26 +61,11 @@ input:focus {
   margin-top: 15px;
   transition: background 0.2s ease;
 }
-
-.btn:hover {
-  background-color: #1565C0;
-}
-
-.btn-secondary {
-  background-color: #43A047;
-}
-
-.btn-secondary:hover {
-  background-color: #2E7D32;
-}
-
-.btn-danger {
-  background-color: #E53935;
-}
-
-.btn-danger:hover {
-  background-color: #C62828;
-}
+.btn:hover { background-color: #1565C0; }
+.btn-secondary { background-color: #43A047; }
+.btn-secondary:hover { background-color: #2E7D32; }
+.btn-danger { background-color: #E53935; }
+.btn-danger:hover { background-color: #C62828; }
 
 /* ==================== */
 /* Tema do desafio      */
@@ -104,13 +84,11 @@ input:focus {
 .challenge-container div {
   margin: 1rem 0;
 }
-
 .challenge-container p {
   font-size: 1.4rem;
   letter-spacing: 0.15rem;
   margin-bottom: 0.5rem;
 }
-
 .challenge-container input {
   padding: 0.6rem;
   font-size: 1rem;
@@ -125,31 +103,32 @@ input:focus {
 /* ==================== */
 /* Feedback visual      */
 /* ==================== */
-.correct {
-  color: #4CAF50;
-  font-weight: bold;
-}
-
-.wrong {
-  color: #FF5252;
-  font-weight: bold;
-}
-
+.correct { color: #4CAF50; font-weight: bold; }
+.wrong { color: #FF5252; font-weight: bold; }
 .result-message {
   margin-top: 15px;
   text-align: center;
   font-size: 18px;
   font-weight: bold;
-  min-height: 24px; /* evita pular layout */
+  min-height: 24px;
 }
 
 /* ==================== */
-/* Rankings             */
+/* Rankings lado a lado  */
 /* ==================== */
+.ranking-flex {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.ranking-block { flex: 1 1 45%; }
+
 .ranking-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 15px;
+  margin-top: 10px;
   background: #2a2a2a;
   border-radius: 8px;
   overflow: hidden;
@@ -167,32 +146,15 @@ input:focus {
   color: #FFD700;
 }
 
-.ranking-table tr:nth-child(even) {
-  background: #242424;
-}
-
-.ranking-table tr:hover {
-  background: #3a3a3a;
-}
+.ranking-table tr:nth-child(even) { background: #242424; }
+.ranking-table tr:hover { background: #3a3a3a; }
 
 /* ==================== */
 /* Responsividade       */
 /* ==================== */
-@media (max-width: 600px) {
-  .container {
-    padding: 1.2rem;
-  }
-
-  .challenge-container p {
-    font-size: 1.2rem;
-  }
-
-  input, .btn {
-    font-size: 14px;
-  }
-
-  .ranking-table th, .ranking-table td {
-    font-size: 12px;
-    padding: 6px;
-  }
+@media (max-width: 800px) {
+  .container { padding: 1.2rem; }
+  .challenge-container p { font-size: 1.2rem; }
+  input, .btn { font-size: 14px; }
+  .ranking-table th, .ranking-table td { font-size: 12px; padding: 6px; }
 }
