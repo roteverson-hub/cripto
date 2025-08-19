@@ -21,7 +21,7 @@ body {
 /* Container Principal  */
 /* ==================== */
 .container {
-  max-width: 600px;
+  max-width: 700px;
   width: 100%;
   background: #1e1e1e;
   padding: 2rem;
@@ -144,6 +144,38 @@ input:focus {
 }
 
 /* ==================== */
+/* Rankings             */
+/* ==================== */
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  background: #2a2a2a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ranking-table th, .ranking-table td {
+  padding: 10px;
+  border-bottom: 1px solid #444;
+  text-align: center;
+}
+
+.ranking-table th {
+  background: #333;
+  font-weight: bold;
+  color: #FFD700;
+}
+
+.ranking-table tr:nth-child(even) {
+  background: #242424;
+}
+
+.ranking-table tr:hover {
+  background: #3a3a3a;
+}
+
+/* ==================== */
 /* Responsividade       */
 /* ==================== */
 @media (max-width: 600px) {
@@ -157,5 +189,10 @@ input:focus {
 
   input, .btn {
     font-size: 14px;
+  }
+
+  .ranking-table th, .ranking-table td {
+    font-size: 12px;
+    padding: 6px;
   }
 }
