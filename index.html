@@ -261,7 +261,7 @@
         // Ranking Diário
         const dailyBody = document.querySelector("#daily-ranking tbody");
         dailyBody.innerHTML = "";
-        (data.daily || []).forEach((row, idx) => {
+        (data.dailyTop || []).forEach((row, idx) => {
           dailyBody.innerHTML += `<tr>
             <td>${idx+1}</td><td>${row.username}</td><td>${row.points}</td><td>${row.attempts}</td><td>${row.elapsed}s</td>
           </tr>`;
@@ -270,15 +270,4 @@
         // Ranking Global
         const globalBody = document.querySelector("#global-ranking tbody");
         globalBody.innerHTML = "";
-        (data.global || []).forEach((row, idx) => {
-          globalBody.innerHTML += `<tr>
-            <td>${idx+1}</td><td>${row.username}</td><td>${row.points}</td>
-          </tr>`;
-        });
-      } catch (err) {
-        console.error("Erro ao carregar ranking:", err);
-      }
-    }
-  </script>
-</body>
-</html>
+        (data.overallTotal || []).forEach((r
