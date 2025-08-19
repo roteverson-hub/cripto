@@ -17,7 +17,7 @@
 
     <button id="loadChallenge" class="btn">Carregar Desafio do Dia</button>
 
-    <pre id="debug" class="debug"></pre>
+   <pre id="debug" class="debug"></pre>
   </div>
 
   <script>
@@ -44,7 +44,7 @@
         });
 
         // Debug JSON
-        document.getElementById('debug').textContent = JSON.stringify(data, null, 2);
+        // document.getElementById('debug').textContent = JSON.stringify(data, null, 2);
       } catch (err) {
         console.error(err);
         alert("Erro ao carregar desafio do dia.");
