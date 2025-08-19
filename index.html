@@ -5,48 +5,131 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cripto3 - Desafio Diário</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      color: #f1f1f1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      width: 100%;
+      background: #1e1e1e;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    h1 { text-align: center; margin-bottom: 20px; }
+    .theme-text { font-weight: bold; margin-bottom: 15px; text-align: center; }
+    .challenge-word {
+      margin-bottom: 15px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #3a86ff;
+      color: #fff;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    .btn:hover { background: #265ed3; }
+    .correct { color: #4CAF50; font-weight: bold; }
+    .wrong { color: #FF5252; font-weight: bold; }
+    .result-message {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h1>CRIPTO3 – Desafio Diário</h1>
     <p id="theme" class="theme-text"></p>
 
-    <div id="challenge" class="challenge-container">
-      <!-- Palavras cifradas e inputs aparecerão aqui -->
-    </div>
+    <div id="challenge" class="challenge-container"></div>
 
     <button id="loadChallenge" class="btn">Carregar Desafio do Dia</button>
+    <button id="submitAnswers" class="btn" style="display: none;">Enviar Respostas</button>
 
+    <p id="result" class="result-message"></p>
   </div>
 
   <script>
-    const APPS_PROXY_URL = "/api/challenge"; // proxy no Vercel
+    const APPS_PROXY_URL = "/api/challenge";
+    let originalWords = [];
 
     document.getElementById('loadChallenge').addEventListener('click', async () => {
       try {
         const response = await fetch(APPS_PROXY_URL);
         const data = await response.json();
 
-        // Mostra tema
         document.getElementById('theme').textContent = `Tema: ${data.theme}`;
+        originalWords = data.original; // Guardamos as respostas corretas
 
-        // Monta palavras cifradas e inputs
         const challengeDiv = document.getElementById('challenge');
         challengeDiv.innerHTML = '';
         data.words.forEach((word, index) => {
           const div = document.createElement('div');
+          div.classList.add('challenge-word');
           div.innerHTML = `
             <p>${word}</p>
             <input type="text" id="input-${index}" placeholder="Digite a palavra correta">
+            <span id="feedback-${index}"></span>
           `;
           challengeDiv.appendChild(div);
         });
 
-        // Debug JSON
-        // document.getElementById('debug').textContent = JSON.stringify(data, null, 2);
+        // Esconde botão inicial e mostra botão enviar
+        document.getElementById('loadChallenge').style.display = "none";
+        document.getElementById('submitAnswers').style.display = "block";
+
       } catch (err) {
         console.error(err);
         alert("Erro ao carregar desafio do dia.");
+      }
+    });
+
+    document.getElementById('submitAnswers').addEventListener('click', () => {
+      let correctCount = 0;
+
+      originalWords.forEach((answer, index) => {
+        const input = document.getElementById(`input-${index}`);
+        const feedback = document.getElementById(`feedback-${index}`);
+
+        if (input.value.trim().toUpperCase() === answer.toUpperCase()) {
+          feedback.textContent = " ✅";
+          feedback.className = "correct";
+          correctCount++;
+        } else {
+          feedback.textContent = " ❌";
+          feedback.className = "wrong";
+        }
+      });
+
+      const resultMsg = document.getElementById("result");
+      if (correctCount === originalWords.length) {
+        resultMsg.textContent = "🎉 Parabéns! Você acertou todas!";
+        resultMsg.style.color = "#4CAF50";
+      } else {
+        resultMsg.textContent = `Você acertou ${correctCount} de ${originalWords.length}.`;
+        resultMsg.style.color = "#FFB300";
       }
     });
   </script>
