@@ -270,4 +270,16 @@
         // Ranking Global
         const globalBody = document.querySelector("#global-ranking tbody");
         globalBody.innerHTML = "";
-        (data.overallTotal || []).forEach((r
+        (data.overallTotal || []).forEach((row, idx) => {
+          globalBody.innerHTML += `<tr>
+            <td>${idx+1}</td><td>${row.username}</td><td>${row.totalPoints}</td>
+          </tr>`;
+        });
+
+      } catch (err) {
+        console.error("Erro ao carregar ranking:", err);
+      }
+    }
+  </script>
+</body>
+</html>
