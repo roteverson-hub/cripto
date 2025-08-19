@@ -4,13 +4,47 @@ body {
   font-family: Arial, sans-serif;
   background-color: #121212;
   color: #FFFFFF;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
 }
 
 .container {
   max-width: 600px;
-  margin: 2rem auto;
-  padding: 1rem;
+  width: 100%;
+  background: #1e1e1e;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.5);
   text-align: center;
+}
+
+/* Inputs */
+input {
+  width: 90%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  border: none;
+  font-size: 16px;
+}
+
+/* Botão */
+.btn {
+  width: 95%;
+  padding: 12px;
+  background-color: #1E88E5;
+  color: #FFFFFF;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.btn:hover {
+  background-color: #1565C0;
 }
 
 /* Tema */
@@ -33,31 +67,26 @@ body {
 .challenge-container input {
   padding: 0.5rem;
   font-size: 1rem;
-  width: 60%;
+  width: 70%;
   border: none;
   border-radius: 4px;
 }
 
-/* Botão */
-.btn {
-  background-color: #1E88E5;
-  color: #FFFFFF;
-  padding: 0.7rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 1rem;
+/* Feedback */
+.correct {
+  color: #4CAF50;
+  font-weight: bold;
 }
 
-.btn:hover {
-  background-color: #1565C0;
+.wrong {
+  color: #FF5252;
+  font-weight: bold;
 }
 
-/* Debug */
-.debug {
-  text-align: left;
-  font-size: 0.8rem;
-  color: #AAAAAA;
-  margin-top: 2rem;
-  overflow-x: auto;
+/* Mensagens */
+.result-message {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
 }
