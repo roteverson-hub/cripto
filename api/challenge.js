@@ -6,10 +6,12 @@ export default async function handler(req, res) {
     const response = await fetch(APPS_SCRIPT_URL);
     const data = await response.json();
 
-    // Retorna o JSON para o frontend
-    res.status(200).json(data);
+    // Força Content-Type com UTF-8
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(200).send(JSON.stringify(data));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Erro ao buscar desafio do Apps Script" });
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(500).send(JSON.stringify({ error: "Erro ao buscar desafio do Apps Script" }));
   }
 }
