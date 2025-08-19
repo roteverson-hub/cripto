@@ -1,36 +1,59 @@
-/* Geral */
+/* ==================== */
+/* Reset & Base Styles  */
+/* ==================== */
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #121212;
   color: #FFFFFF;
   display: flex;
   justify-content: center;
-  align-items: center;
-  height: 100vh;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
 }
 
+/* ==================== */
+/* Container Principal  */
+/* ==================== */
 .container {
   max-width: 600px;
   width: 100%;
   background: #1e1e1e;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   text-align: center;
+  margin-top: 30px;
 }
 
-/* Inputs */
+/* ==================== */
+/* Inputs & Forms       */
+/* ==================== */
 input {
   width: 90%;
-  padding: 10px;
+  padding: 12px;
   margin: 10px 0;
   border-radius: 6px;
-  border: none;
+  border: 1px solid #333;
   font-size: 16px;
+  background: #2a2a2a;
+  color: #fff;
+  outline: none;
+  transition: border 0.2s ease;
 }
 
-/* Botão */
+input:focus {
+  border: 1px solid #1E88E5;
+}
+
+/* ==================== */
+/* Botões               */
+/* ==================== */
 .btn {
   width: 95%;
   padding: 12px;
@@ -41,38 +64,67 @@ input {
   border-radius: 8px;
   cursor: pointer;
   margin-top: 15px;
+  transition: background 0.2s ease;
 }
 
 .btn:hover {
   background-color: #1565C0;
 }
 
-/* Tema */
-.theme-text {
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  color: #FFD700;
+.btn-secondary {
+  background-color: #43A047;
 }
 
-/* Palavras cifradas e inputs */
+.btn-secondary:hover {
+  background-color: #2E7D32;
+}
+
+.btn-danger {
+  background-color: #E53935;
+}
+
+.btn-danger:hover {
+  background-color: #C62828;
+}
+
+/* ==================== */
+/* Tema do desafio      */
+/* ==================== */
+.theme-text {
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+  color: #FFD700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ==================== */
+/* Palavras do desafio  */
+/* ==================== */
 .challenge-container div {
   margin: 1rem 0;
 }
 
 .challenge-container p {
-  font-size: 1.5rem;
-  letter-spacing: 0.1rem;
+  font-size: 1.4rem;
+  letter-spacing: 0.15rem;
+  margin-bottom: 0.5rem;
 }
 
 .challenge-container input {
-  padding: 0.5rem;
+  padding: 0.6rem;
   font-size: 1rem;
   width: 70%;
   border: none;
   border-radius: 4px;
+  background: #2a2a2a;
+  color: #fff;
+  text-align: center;
 }
 
-/* Feedback */
+/* ==================== */
+/* Feedback visual      */
+/* ==================== */
 .correct {
   color: #4CAF50;
   font-weight: bold;
@@ -83,10 +135,27 @@ input {
   font-weight: bold;
 }
 
-/* Mensagens */
 .result-message {
   margin-top: 15px;
   text-align: center;
   font-size: 18px;
   font-weight: bold;
+  min-height: 24px; /* evita pular layout */
+}
+
+/* ==================== */
+/* Responsividade       */
+/* ==================== */
+@media (max-width: 600px) {
+  .container {
+    padding: 1.2rem;
+  }
+
+  .challenge-container p {
+    font-size: 1.2rem;
+  }
+
+  input, .btn {
+    font-size: 14px;
+  }
 }
