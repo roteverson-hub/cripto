@@ -40,23 +40,26 @@
       <p id="result" class="result-message"></p>
       <button id="logout" class="btn btn-danger" style="display:none;">Sair</button>
 
-      <!-- 🔹 Rankings -->
-      <div id="ranking-section" style="margin-top:30px; display:none;">
-        <h2>🏆 Ranking Diário</h2>
-        <table id="daily-ranking" class="ranking-table">
-          <thead>
-            <tr><th>Pos</th><th>Usuário</th><th>Pontos</th><th>Tentativas</th><th>Tempo</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-
-        <h2 style="margin-top:20px;">🌍 Ranking Global</h2>
-        <table id="global-ranking" class="ranking-table">
-          <thead>
-            <tr><th>Pos</th><th>Usuário</th><th>Pontos</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <!-- 🔹 Rankings lado a lado -->
+      <div id="ranking-section" class="ranking-flex" style="margin-top:30px; display:none;">
+        <div class="ranking-block">
+          <h2>🏆 Diário</h2>
+          <table id="daily-ranking" class="ranking-table">
+            <thead>
+              <tr><th>#</th><th>Usuário</th><th>Pontos</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="ranking-block">
+          <h2>🌍 Global</h2>
+          <table id="global-ranking" class="ranking-table">
+            <thead>
+              <tr><th>#</th><th>Usuário</th><th>Pontos</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -100,7 +103,6 @@
       document.getElementById("login-section").style.display = "none";
       document.getElementById("register-section").style.display = "block";
     });
-
     document.getElementById("goLogin").addEventListener("click", () => {
       document.getElementById("register-section").style.display = "none";
       document.getElementById("login-section").style.display = "block";
@@ -112,7 +114,6 @@
     document.getElementById("btnRegister").addEventListener("click", async () => {
       const username = document.getElementById("register-username").value;
       const password = document.getElementById("register-password").value;
-
       try {
         const res = await fetch(REGISTER_URL, {
           method: "POST",
@@ -121,7 +122,6 @@
         });
         const data = await res.json();
         document.getElementById("registerMsg").textContent = data.message;
-
         if (data.success) {
           document.getElementById("register-section").style.display = "none";
           document.getElementById("login-section").style.display = "block";
@@ -137,7 +137,6 @@
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const username = document.getElementById("login-username").value;
       const password = document.getElementById("login-password").value;
-
       try {
         const res = await fetch(LOGIN_URL, {
           method: "POST",
@@ -146,7 +145,6 @@
         });
         const data = await res.json();
         document.getElementById("loginMsg").textContent = data.message;
-
         if (data.success) {
           localStorage.setItem("user", username);
           document.getElementById("login-section").style.display = "none";
@@ -167,10 +165,8 @@
       try {
         const response = await fetch(CHALLENGE_URL);
         const data = await response.json();
-
         document.getElementById('theme').textContent = `Tema: ${data.theme}`;
         originalWords = data.original;
-
         const challengeDiv = document.getElementById('challenge');
         challengeDiv.innerHTML = '';
         data.words.forEach((word, index) => {
@@ -183,12 +179,10 @@
           `;
           challengeDiv.appendChild(div);
         });
-
         document.getElementById('loadChallenge').style.display = "none";
         document.getElementById('submitAnswers').style.display = "block";
         document.getElementById('result').textContent = "";
         startTime = Date.now();
-
       } catch (err) {
         console.error(err);
         alert("Erro ao carregar desafio do dia.");
@@ -200,11 +194,9 @@
     // =========================
     document.getElementById('submitAnswers').addEventListener('click', async () => {
       let correctCount = 0;
-
       originalWords.forEach((answer, index) => {
         const input = document.getElementById(`input-${index}`);
         const feedback = document.getElementById(`feedback-${index}`);
-
         if (input.value.trim().toUpperCase() === answer.toUpperCase()) {
           feedback.textContent = " ✅";
           feedback.className = "correct";
@@ -214,12 +206,9 @@
           feedback.className = "wrong";
         }
       });
-
       const resultMsg = document.getElementById("result");
       const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      const attempts = originalWords.length;
       const points = correctCount;
-
       if (correctCount === originalWords.length) {
         resultMsg.textContent = "🎉 Parabéns! Você acertou todas!";
         resultMsg.style.color = "#4CAF50";
@@ -227,8 +216,6 @@
         resultMsg.textContent = `Você acertou ${correctCount} de ${originalWords.length}.`;
         resultMsg.style.color = "#FFB300";
       }
-
-      // 🔹 Enviar resultado ao backend
       try {
         const username = localStorage.getItem("user");
         await fetch(SUBMIT_URL, {
@@ -238,7 +225,7 @@
             username,
             challengeDate: new Date().toISOString().split("T")[0],
             points,
-            attempts,
+            attempts: originalWords.length,
             elapsed
           })
         });
@@ -255,19 +242,18 @@
       try {
         const res = await fetch(RANKING_URL);
         const data = await res.json();
+        document.getElementById("ranking-section").style.display = "flex";
 
-        document.getElementById("ranking-section").style.display = "block";
-
-        // Ranking Diário
+        // Diário
         const dailyBody = document.querySelector("#daily-ranking tbody");
         dailyBody.innerHTML = "";
         (data.dailyTop || []).forEach((row, idx) => {
           dailyBody.innerHTML += `<tr>
-            <td>${idx+1}</td><td>${row.username}</td><td>${row.points}</td><td>${row.attempts}</td><td>${row.elapsed}s</td>
+            <td>${idx+1}</td><td>${row.username}</td><td>${row.points}</td>
           </tr>`;
         });
 
-        // Ranking Global
+        // Global
         const globalBody = document.querySelector("#global-ranking tbody");
         globalBody.innerHTML = "";
         (data.overallTotal || []).forEach((row, idx) => {
@@ -275,7 +261,6 @@
             <td>${idx+1}</td><td>${row.username}</td><td>${row.totalPoints}</td>
           </tr>`;
         });
-
       } catch (err) {
         console.error("Erro ao carregar ranking:", err);
       }
