@@ -133,12 +133,20 @@ input:focus { border: 1px solid #1E88E5; }
 /* ==================== */
 .correct { color: #4CAF50; font-weight: bold; }
 .wrong { color: #FF5252; font-weight: bold; }
+
+/* Mensagens gerais (resultado / bloqueio diário) */
 .result-message {
   margin-top: 15px;
   text-align: center;
   font-size: 18px;
   font-weight: bold;
   min-height: 24px;
+  color: #FFD700; /* padrão */
+}
+
+/* Mensagem de bloqueio diário */
+.result-message.daily-block {
+  color: #FF5252;
 }
 
 /* ==================== */
