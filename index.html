@@ -94,24 +94,81 @@
     let originalWords = [];
     let startTime = null;
 
+    // ========= Helpers =========
+    function showSection(id, visible) {
+      document.getElementById(id).style.display = visible ? "block" : "none";
+    }
+
+    function showGameUI(user) {
+      showSection("login-section", false);
+      showSection("register-section", false);
+      showSection("game-section", true);
+      document.getElementById("welcome").textContent = `👋 Bem-vindo, ${user}!`;
+      document.getElementById("logout").style.display = "block";
+      loadRanking();
+    }
+
+    function showDailyBlock() {
+      const resultMsg = document.getElementById("result");
+      resultMsg.textContent = "⚠️ Você já completou o desafio de hoje! Volte amanhã.";
+      resultMsg.classList.add("daily-block");
+      resultMsg.style.color = ""; // evita sobrescrever a classe
+      document.getElementById("submitAnswers").style.display = "none";
+      document.getElementById("loadChallenge").style.display = "none";
+      document.getElementById("short-instructions").style.display = "none";
+    }
+
+    function clearDailyBlock() {
+      const resultMsg = document.getElementById("result");
+      resultMsg.classList.remove("daily-block");
+      resultMsg.textContent = "";
+      resultMsg.style.color = "";
+    }
+
+    async function syncServerMemoryIntoLocalStorage() {
+      // Se o servidor lembrou do usuário via cookie, sincroniza no localStorage
+      try {
+        const res = await fetch(LOGIN_URL, { method: "GET" });
+        const data = await res.json();
+        if (data?.logged && data?.username && !localStorage.getItem("user")) {
+          localStorage.setItem("user", data.username);
+        }
+      } catch {}
+    }
+
+    async function checkDoneTodayAndMaybeBlock(user) {
+      try {
+        const url = `${CHALLENGE_URL}?username=${encodeURIComponent(user)}&statusOnly=1`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const done = data?.doneToday ?? data?.alreadyCompletedToday ?? false;
+        if (done) showDailyBlock();
+      } catch {}
+    }
+
     // =========================
     // 🔹 Persistência de Login
     // =========================
-    function checkLogin() {
+    async function checkLogin() {
+      await syncServerMemoryIntoLocalStorage();
+
       const user = localStorage.getItem("user");
       if (user) {
-        document.getElementById("login-section").style.display = "none";
-        document.getElementById("register-section").style.display = "none";
-        document.getElementById("game-section").style.display = "block";
-        document.getElementById("welcome").textContent = `👋 Bem-vindo, ${user}!`;
-        document.getElementById("logout").style.display = "block";
-        loadRanking();
+        showGameUI(user);
+        // Checa se já fez hoje (caso já estivesse logado pela memória do servidor)
+        checkDoneTodayAndMaybeBlock(user);
+      } else {
+        showSection("login-section", true);
       }
     }
     checkLogin();
 
     document.getElementById("logout").addEventListener("click", () => {
       localStorage.removeItem("user");
+      // limpa visual
+      document.getElementById("challenge").innerHTML = "";
+      document.getElementById("theme").textContent = "";
+      clearDailyBlock();
       location.reload();
     });
 
@@ -119,19 +176,19 @@
     // 🔹 Troca de Telas
     // =========================
     document.getElementById("goRegister").addEventListener("click", () => {
-      document.getElementById("login-section").style.display = "none";
-      document.getElementById("register-section").style.display = "block";
+      showSection("login-section", false);
+      showSection("register-section", true);
     });
     document.getElementById("goLogin").addEventListener("click", () => {
-      document.getElementById("register-section").style.display = "none";
-      document.getElementById("login-section").style.display = "block";
+      showSection("register-section", false);
+      showSection("login-section", true);
     });
 
     // =========================
     // 🔹 Registro
     // =========================
     document.getElementById("btnRegister").addEventListener("click", async () => {
-      const username = document.getElementById("register-username").value;
+      const username = document.getElementById("register-username").value.trim();
       const password = document.getElementById("register-password").value;
       try {
         const res = await fetch(REGISTER_URL, {
@@ -140,12 +197,12 @@
           body: JSON.stringify({ username, password })
         });
         const data = await res.json();
-        document.getElementById("registerMsg").textContent = data.message;
+        document.getElementById("registerMsg").textContent = data.message || "";
         if (data.success) {
-          document.getElementById("register-section").style.display = "none";
-          document.getElementById("login-section").style.display = "block";
+          showSection("register-section", false);
+          showSection("login-section", true);
         }
-      } catch (err) {
+      } catch {
         document.getElementById("registerMsg").textContent = "Erro ao registrar.";
       }
     });
@@ -154,7 +211,7 @@
     // 🔹 Login
     // =========================
     document.getElementById("btnLogin").addEventListener("click", async () => {
-      const username = document.getElementById("login-username").value;
+      const username = document.getElementById("login-username").value.trim();
       const password = document.getElementById("login-password").value;
       try {
         const res = await fetch(LOGIN_URL, {
@@ -163,16 +220,22 @@
           body: JSON.stringify({ username, password })
         });
         const data = await res.json();
-        document.getElementById("loginMsg").textContent = data.message;
+        document.getElementById("loginMsg").textContent = data.message || "";
+
         if (data.success) {
           localStorage.setItem("user", username);
-          document.getElementById("login-section").style.display = "none";
-          document.getElementById("game-section").style.display = "block";
-          document.getElementById("welcome").textContent = `👋 Bem-vindo, ${username}!`;
-          document.getElementById("logout").style.display = "block";
-          loadRanking();
+          showGameUI(username);
+
+          // Se o Apps Script já indicou que fez hoje, bloqueia já
+          const already = data?.alreadyCompletedToday === true;
+          if (already) {
+            showDailyBlock();
+          } else {
+            clearDailyBlock();
+            document.getElementById("loadChallenge").style.display = "block";
+          }
         }
-      } catch (err) {
+      } catch {
         document.getElementById("loginMsg").textContent = "Erro ao logar.";
       }
     });
@@ -182,26 +245,28 @@
     // =========================
     document.getElementById('loadChallenge').addEventListener('click', async () => {
       const username = localStorage.getItem("user");
+      if (!username) return;
+
       try {
-        const response = await fetch(CHALLENGE_URL);
+        // **Importante**: enviar o username para o backend poder checar se já fez hoje
+        const response = await fetch(`${CHALLENGE_URL}?username=${encodeURIComponent(username)}`);
         const data = await response.json();
 
-        // Verifica se usuário já fez o desafio hoje
-        if (data.doneToday) {
-          const resultMsg = document.getElementById("result");
-          resultMsg.textContent = "⚠️ Você já completou o desafio de hoje!";
-          resultMsg.classList.add("daily-block");
+        // Se backend disser que já fez hoje, bloqueia
+        const done = data?.doneToday ?? data?.alreadyCompletedToday ?? false;
+        if (done) {
+          showDailyBlock();
           return;
         }
 
         // Tema + palavras originais (para validação)
         document.getElementById('theme').textContent = `Tema: ${data.theme}`;
-        originalWords = data.original;
+        originalWords = data.original || [];
 
         // Monta a UI do desafio
         const challengeDiv = document.getElementById('challenge');
         challengeDiv.innerHTML = '';
-        data.words.forEach((word, index) => {
+        (data.words || []).forEach((word, index) => {
           const div = document.createElement('div');
           div.classList.add('challenge-word');
           div.innerHTML = `
@@ -221,9 +286,8 @@
         // Botões / estados
         document.getElementById('loadChallenge').style.display = "none";
         document.getElementById('submitAnswers').style.display = "block";
-        const resultMsg = document.getElementById("result");
-        resultMsg.textContent = "";
-        resultMsg.classList.remove("daily-block");
+        clearDailyBlock();
+        document.getElementById('result').textContent = "";
         startTime = Date.now();
 
       } catch (err) {
@@ -240,7 +304,7 @@
       originalWords.forEach((answer, index) => {
         const input = document.getElementById(`input-${index}`);
         const feedback = document.getElementById(`feedback-${index}`);
-        if (input.value.trim().toUpperCase() === answer.toUpperCase()) {
+        if (input.value.trim().toUpperCase() === String(answer || "").toUpperCase()) {
           feedback.textContent = " ✅";
           feedback.className = "correct";
           correctCount++;
@@ -276,6 +340,9 @@
             elapsed
           })
         });
+
+        // Após enviar, bloqueia nova tentativa localmente
+        showDailyBlock();
         loadRanking();
       } catch (err) {
         console.error("Erro ao enviar resultado:", err);
