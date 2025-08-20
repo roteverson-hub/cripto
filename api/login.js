@@ -1,4 +1,8 @@
-// api/login.js
+// pages/api/login.js
+// Encaminha login ao Apps Script USERS_URL (POST), seta cookie se sucesso.
+// GET retorna se há cookie "user" e verifica se já jogou hoje.
+// DELETE apaga o cookie.
+
 export default async function handler(req, res) {
   // Helpers
   const safeJson = async (r) => {
