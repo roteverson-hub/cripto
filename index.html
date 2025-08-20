@@ -112,6 +112,7 @@
       loadRanking();
     }
 
+    // Apresenta o banner de bloqueio no topo (apenas o topo, sem duplicar em #result)
     function showDailyBlockForUser(username) {
       const el = document.getElementById("alreadyPlayedMsg");
       if (el) {
@@ -154,26 +155,25 @@
     function todayString() {
       return new Date().toISOString().split("T")[0];
     }
-
     function setPlayedLocalForUser(username) {
       if (!username) return;
       localStorage.setItem(`playedDate:${username}`, todayString());
     }
-
     function hasPlayedLocalForUser(username) {
       if (!username) return false;
       return localStorage.getItem(`playedDate:${username}`) === todayString();
     }
-
     function eraseCookie(name) {
       document.cookie = name + "=; Max-Age=0; path=/";
     }
 
+    // =========================
+    // Persistência / Sincronização
+    // =========================
     async function checkLogin() {
       try {
         const res = await fetch(LOGIN_URL, { credentials: "same-origin" });
         const data = await res.json().catch(() => ({}));
-
         if (data.logged && data.username) {
           if (!localStorage.getItem("user")) localStorage.setItem("user", data.username);
           showGameUI(data.username);
@@ -198,7 +198,7 @@
     checkLogin();
 
     document.getElementById("logout").addEventListener("click", async () => {
-      try { await fetch(LOGIN_URL, { method: "DELETE", credentials: "same-origin" }); } catch (e) {}
+      try { await fetch(LOGIN_URL, { method: "DELETE", credentials: "same-origin" }); } catch {}
       eraseCookie("user");
       localStorage.removeItem("user");
       document.getElementById("challenge").innerHTML = "";
@@ -218,6 +218,9 @@
       showSection("login-section", true);
     });
 
+    // =========================
+    // Registro
+    // =========================
     document.getElementById("btnRegister").addEventListener("click", async () => {
       const username = document.getElementById("register-username").value.trim();
       const password = document.getElementById("register-password").value;
@@ -227,19 +230,16 @@
       }
       try {
         const res = await fetch(REGISTER_URL, {
-          method: "POST",
-          credentials: "same-origin",
+          method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password })
         });
         const data = await res.json();
         document.getElementById("registerMsg").textContent = data.message || "";
-
         if (data.success) {
           try {
             const loginRes = await fetch(LOGIN_URL, {
-              method: "POST",
-              credentials: "same-origin",
+              method: "POST", credentials: "same-origin",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ username, password })
             });
@@ -276,6 +276,9 @@
       }
     });
 
+    // =========================
+    // Login
+    // =========================
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const username = document.getElementById("login-username").value.trim();
       const password = document.getElementById("login-password").value;
@@ -285,8 +288,7 @@
       }
       try {
         const res = await fetch(LOGIN_URL, {
-          method: "POST",
-          credentials: "same-origin",
+          method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password })
         });
@@ -309,6 +311,9 @@
       }
     });
 
+    // =========================
+    // Carregar Desafio
+    // =========================
     document.getElementById("loadChallenge").addEventListener("click", async () => {
       const username = localStorage.getItem("user");
       if (!username) return;
@@ -325,7 +330,7 @@
           return;
         }
       } catch (err) {
-        console.warn("status check failed (non-fatal):", err);
+        console.warn("status check failed:", err);
       }
       try {
         const response = await fetch(CHALLENGE_URL);
@@ -344,10 +349,8 @@
           `;
           challengeDiv.appendChild(div);
         });
-        const longMsg = document.getElementById("instructions");
-        const shortMsg = document.getElementById("short-instructions");
-        if (longMsg) longMsg.style.display = "none";
-        if (shortMsg) shortMsg.style.display = "block";
+        document.getElementById("instructions").style.display = "none";
+        document.getElementById("short-instructions").style.display = "block";
         document.getElementById("loadChallenge").style.display = "none";
         document.getElementById("submitAnswers").style.display = "block";
         clearDailyBlockUI();
@@ -359,6 +362,9 @@
       }
     });
 
+    // =========================
+    // Verificar Respostas + Enviar Ranking
+    // =========================
     document.getElementById("submitAnswers").addEventListener("click", async () => {
       let correctCount = 0;
       originalWords.forEach((answer, index) => {
@@ -379,7 +385,9 @@
       const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
       const points = correctCount;
 
-      if (correctCount === originalWords.length) {
+      const isCorrect = (correctCount === originalWords.length);
+
+      if (isCorrect) {
         resultMsg.textContent = "🎉 Parabéns! Você acertou todas!";
         resultMsg.style.color = "#4CAF50";
       } else {
@@ -395,7 +403,7 @@
           points,
           attempts: originalWords.length,
           elapsed,
-          isCorrect: correctCount === originalWords.length // <-- alteração principal
+          isCorrect // 🔹 só true se todas certas
         };
 
         await fetch(SUBMIT_URL, {
@@ -404,14 +412,19 @@
           body: JSON.stringify(payload)
         });
 
-        setPlayedLocalForUser(username);
-        showWinMessage();
-        loadRanking();
+        if (isCorrect) {
+          setPlayedLocalForUser(username);
+          showWinMessage();
+          loadRanking();
+        }
       } catch (err) {
         console.error("Erro ao enviar resultado:", err);
       }
     });
 
+    // =========================
+    // Carregar Ranking
+    // =========================
     async function loadRanking() {
       try {
         const res = await fetch(RANKING_URL);
