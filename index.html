@@ -12,11 +12,22 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Overlay de Carregamento -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
     <div class="container" id="appContainer">
+
+        <!-- 🔹 Título do Jogo nas telas de Login/Registro -->
+        <div class="game-intro">
+            <h1 class="main-title">CRIPTO3</h1>
+            <p>O jogo diário de criptografia</p>
+        </div>
 
         <!-- 🔹 Tela de Login -->
         <div id="login-section" class="content-section is-visible">
-            <h1>Login</h1>
+            <h2>Entrar</h2>
             <input type="text" id="login-username" placeholder="Usuário" />
             <input type="password" id="login-password" placeholder="Senha" />
             <button class="btn" id="btnLogin">Entrar</button>
@@ -26,7 +37,7 @@
 
         <!-- 🔹 Tela de Registro -->
         <div id="register-section" class="content-section">
-            <h1>Registrar</h1>
+            <h2>Registrar</h2>
             <input type="text" id="register-username" placeholder="Usuário" />
             <input type="password" id="register-password" placeholder="Senha" />
             <button class="btn" id="btnRegister">Criar Conta</button>
@@ -101,6 +112,15 @@
 
         let originalWords = [];
         let startTime = null;
+
+        // Funções para mostrar/esconder o loading overlay
+        function showLoading() {
+            document.getElementById("loading-overlay").style.display = "flex";
+        }
+
+        function hideLoading() {
+            document.getElementById("loading-overlay").style.display = "none";
+        }
 
         // Função para mostrar ou esconder seções com a nova classe 'is-visible'
         function showSection(id, visible) {
@@ -188,6 +208,7 @@
         // ==========================================================
         async function checkLogin() {
             try {
+                showLoading();
                 const res = await fetch(LOGIN_URL, { credentials: "same-origin" });
                 const data = await res.json().catch(() => ({}));
                 if (data.logged && data.username) {
@@ -209,11 +230,14 @@
             } catch (err) {
                 console.error("checkLogin error:", err);
                 showSection("login-section", true);
+            } finally {
+                hideLoading();
             }
         }
         checkLogin();
 
         document.getElementById("logout").addEventListener("click", async () => {
+            showLoading();
             try { await fetch(LOGIN_URL, { method: "DELETE", credentials: "same-origin" }); } catch {}
             eraseCookie("user");
             localStorage.removeItem("user");
@@ -221,6 +245,7 @@
             document.getElementById("theme").textContent = "";
             clearDailyBlockUI();
             location.reload();
+            hideLoading();
         });
 
         document.getElementById("goRegister").addEventListener("click", (e) => {
@@ -244,6 +269,7 @@
                 document.getElementById("registerMsg").textContent = "Usuário e senha obrigatórios.";
                 return;
             }
+            showLoading();
             try {
                 const res = await fetch(REGISTER_URL, {
                     method: "POST", credentials: "same-origin",
@@ -289,6 +315,8 @@
             } catch (err) {
                 console.error("register error:", err);
                 document.getElementById("registerMsg").textContent = "Erro ao registrar.";
+            } finally {
+                hideLoading();
             }
         });
 
@@ -302,6 +330,7 @@
                 document.getElementById("loginMsg").textContent = "Usuário e senha obrigatórios.";
                 return;
             }
+            showLoading();
             try {
                 const res = await fetch(LOGIN_URL, {
                     method: "POST", credentials: "same-origin",
@@ -324,6 +353,8 @@
             } catch (err) {
                 console.error("login error:", err);
                 document.getElementById("loginMsg").textContent = "Erro ao logar.";
+            } finally {
+                hideLoading();
             }
         });
 
@@ -337,6 +368,7 @@
                 showDailyBlockForUser(username);
                 return;
             }
+            showLoading();
             try {
                 const statusRes = await fetch(LOGIN_URL, { credentials: "same-origin" });
                 const status = await statusRes.json().catch(() => ({}));
@@ -400,6 +432,8 @@
             } catch (err) {
                 console.error("Erro ao carregar desafio:", err);
                 alert("Erro ao carregar desafio do dia.");
+            } finally {
+                hideLoading();
             }
         });
 
@@ -407,6 +441,7 @@
         // Verificar Respostas + Enviar Ranking
         // ==========================================================
         document.getElementById("submitAnswers").addEventListener("click", async () => {
+            showLoading();
             let correctCount = 0;
             originalWords.forEach((answer, wordIndex) => {
                 const inputs = document.querySelectorAll(`[data-word-index="${wordIndex}"]`);
@@ -467,6 +502,8 @@
                 }
             } catch (err) {
                 console.error("Erro ao enviar resultado:", err);
+            } finally {
+                hideLoading();
             }
         });
 
@@ -474,6 +511,7 @@
         // Carregar Ranking
         // ==========================================================
         async function loadRanking() {
+            showLoading();
             try {
                 const res = await fetch(RANKING_URL);
                 const data = await res.json();
@@ -494,6 +532,8 @@
                 });
             } catch (err) {
                 console.error("Erro ao carregar ranking:", err);
+            } finally {
+                hideLoading();
             }
         }
     </script>
