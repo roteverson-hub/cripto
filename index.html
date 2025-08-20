@@ -97,6 +97,9 @@
     let originalWords = [];
     let startTime = null;
 
+    // =========================
+    // Funções UI
+    // =========================
     function showSection(id, visible) {
       document.getElementById(id).style.display = visible ? "block" : "none";
     }
@@ -128,6 +131,49 @@
       document.cookie = name + "=; Max-Age=0; path=/";
     }
 
+    // =========================
+    // Banner diário e vitória
+    // =========================
+    function showDailyBlockForUser(username) {
+      const el = document.getElementById("alreadyPlayedMsg");
+      if (el) {
+        el.style.display = "block";
+        el.textContent = "⚠️ Você já completou o desafio de hoje. Volte amanhã.";
+      }
+      document.getElementById("short-instructions").style.display = "none";
+      document.getElementById("loadChallenge").style.display = "none";
+      document.getElementById("submitAnswers").style.display = "none";
+      const resultMsg = document.getElementById("result");
+      resultMsg.textContent = "";
+      resultMsg.classList.remove("win");
+      document.querySelector(".container")?.classList.add("already-played");
+    }
+
+    function clearDailyBlockUI() {
+      const el = document.getElementById("alreadyPlayedMsg");
+      if (el) el.style.display = "none";
+      const resultMsg = document.getElementById("result");
+      resultMsg.classList.remove("daily-block");
+      resultMsg.classList.remove("win");
+      resultMsg.textContent = "";
+      document.querySelector(".container")?.classList.remove("already-played");
+    }
+
+    function showWinMessage() {
+      const el = document.getElementById("alreadyPlayedMsg");
+      if (el) el.style.display = "none";
+      const resultMsg = document.getElementById("result");
+      resultMsg.classList.add("win");
+      resultMsg.textContent = "Parabéns, você completou o desafio de hoje. Volte amanhã para solucionar mais um.";
+      document.getElementById("loadChallenge").style.display = "none";
+      document.getElementById("submitAnswers").style.display = "none";
+      document.getElementById("short-instructions").style.display = "none";
+      document.querySelector(".container")?.classList.add("already-played");
+    }
+
+    // =========================
+    // Check login persistente
+    // =========================
     async function checkLogin() {
       try {
         const res = await fetch(LOGIN_URL, { credentials: "same-origin" });
@@ -137,18 +183,12 @@
           if (!localStorage.getItem("user")) localStorage.setItem("user", data.username);
           showGameUI(data.username);
 
-          if (hasPlayedLocalForUser(data.username)) {
-            showDailyBlockForUser(data.username);
-            return;
-          }
-
-          if (data.alreadyCompletedToday) {
+          if (hasPlayedLocalForUser(data.username) || data.alreadyCompletedToday) {
             setPlayedLocalForUser(data.username);
             showDailyBlockForUser(data.username);
-            return;
+          } else {
+            clearDailyBlockUI();
           }
-
-          clearDailyBlockUI();
         } else {
           showSection("login-section", true);
         }
@@ -159,10 +199,9 @@
     }
     checkLogin();
 
+    // Logout
     document.getElementById("logout").addEventListener("click", async () => {
-      try {
-        await fetch(LOGIN_URL, { method: "DELETE", credentials: "same-origin" });
-      } catch (e) {}
+      try { await fetch(LOGIN_URL, { method: "DELETE", credentials: "same-origin" }); } catch(e){}
       eraseCookie("user");
       localStorage.removeItem("user");
       document.getElementById("challenge").innerHTML = "";
@@ -171,6 +210,7 @@
       location.reload();
     });
 
+    // Troca de telas
     document.getElementById("goRegister").addEventListener("click", (e) => {
       e.preventDefault();
       showSection("login-section", false);
@@ -183,55 +223,142 @@
     });
 
     // =========================
+    // Registro com auto-login
+    // =========================
+    document.getElementById("btnRegister").addEventListener("click", async () => {
+      const username = document.getElementById("register-username").value.trim();
+      const password = document.getElementById("register-password").value;
+      if (!username || !password) {
+        document.getElementById("registerMsg").textContent = "Usuário e senha obrigatórios.";
+        return;
+      }
+      try {
+        const res = await fetch(REGISTER_URL, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        document.getElementById("registerMsg").textContent = data.message || "";
+        if (data.success) {
+          try {
+            const loginRes = await fetch(LOGIN_URL, {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ username, password })
+            });
+            const loginData = await loginRes.json().catch(()=>({}));
+            if (loginData.success) {
+              localStorage.setItem("user", username);
+              showGameUI(username);
+              if (loginData.alreadyCompletedToday) {
+                setPlayedLocalForUser(username);
+                showDailyBlockForUser(username);
+              } else {
+                clearDailyBlockUI();
+                document.getElementById("loadChallenge").style.display = "block";
+              }
+            } else {
+              localStorage.setItem("user", username);
+              showGameUI(username);
+              clearDailyBlockUI();
+              document.getElementById("loadChallenge").style.display = "block";
+            }
+          } catch(err){
+            console.warn("auto-login falhou:", err);
+            localStorage.setItem("user", username);
+            showGameUI(username);
+            clearDailyBlockUI();
+            document.getElementById("loadChallenge").style.display = "block";
+          }
+          document.getElementById("register-username").value = "";
+          document.getElementById("register-password").value = "";
+        }
+      } catch(err) {
+        console.error("register error:", err);
+        document.getElementById("registerMsg").textContent = "Erro ao registrar.";
+      }
+    });
+
+    // =========================
+    // Login
+    // =========================
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const username = document.getElementById("login-username").value.trim();
+      const password = document.getElementById("login-password").value;
+      if (!username || !password) {
+        document.getElementById("loginMsg").textContent = "Usuário e senha obrigatórios.";
+        return;
+      }
+      try {
+        const res = await fetch(LOGIN_URL, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        document.getElementById("loginMsg").textContent = data.message || "";
+        if (data.success) {
+          localStorage.setItem("user", username);
+          showGameUI(username);
+          if (data.alreadyCompletedToday) {
+            setPlayedLocalForUser(username);
+            showDailyBlockForUser(username);
+          } else {
+            clearDailyBlockUI();
+            document.getElementById("loadChallenge").style.display = "block";
+          }
+        }
+      } catch(err){
+        console.error("login error:", err);
+        document.getElementById("loginMsg").textContent = "Erro ao logar.";
+      }
+    });
+
+    // =========================
     // Carregar desafio
     // =========================
     document.getElementById("loadChallenge").addEventListener("click", async () => {
       const username = localStorage.getItem("user");
       if (!username) return;
-
-      if (hasPlayedLocalForUser(username)) {
-        showDailyBlockForUser(username);
-        return;
-      }
+      if (hasPlayedLocalForUser(username)) { showDailyBlockForUser(username); return; }
 
       try {
         const statusRes = await fetch(LOGIN_URL, { credentials: "same-origin" });
         const status = await statusRes.json().catch(() => ({}));
-        if (status.logged && status.username === username && status.alreadyCompletedToday) {
+        if (status.logged && status.username===username && status.alreadyCompletedToday) {
           setPlayedLocalForUser(username);
           showDailyBlockForUser(username);
           return;
         }
-      } catch (err) { console.warn(err); }
+      } catch(err){console.warn(err);}
 
       try {
         const response = await fetch(CHALLENGE_URL);
         const data = await response.json();
-
         document.getElementById("theme").textContent = `Tema: ${data.theme || ""}`;
         originalWords = data.original || [];
-
         const challengeDiv = document.getElementById("challenge");
         challengeDiv.innerHTML = "";
-        (data.words || []).forEach((word, index) => {
-          const div = document.createElement("div");
+        (data.words||[]).forEach((word,index)=>{
+          const div=document.createElement("div");
           div.classList.add("challenge-word");
-          div.innerHTML = `
-            <p>${word}</p>
+          div.innerHTML = `<p>${word}</p>
             <input type="text" id="input-${index}" placeholder="Digite a palavra correta" />
-            <span id="feedback-${index}"></span>
-          `;
+            <span id="feedback-${index}"></span>`;
           challengeDiv.appendChild(div);
         });
-
-        document.getElementById("instructions").style.display = "none";
-        document.getElementById("short-instructions").style.display = "block";
-        document.getElementById("loadChallenge").style.display = "none";
-        document.getElementById("submitAnswers").style.display = "block";
+        document.getElementById("instructions").style.display="none";
+        document.getElementById("short-instructions").style.display="block";
+        document.getElementById("loadChallenge").style.display="none";
+        document.getElementById("submitAnswers").style.display="block";
         clearDailyBlockUI();
-        document.getElementById("result").textContent = "";
-        startTime = Date.now();
-      } catch (err) {
+        document.getElementById("result").textContent="";
+        startTime=Date.now();
+      } catch(err){
         console.error("Erro ao carregar desafio:", err);
         alert("Erro ao carregar desafio do dia.");
       }
@@ -242,51 +369,44 @@
     // =========================
     document.getElementById("submitAnswers").addEventListener("click", async () => {
       let correctCount = 0;
-      originalWords.forEach((answer, index) => {
-        const input = document.getElementById(`input-${index}`);
-        const feedback = document.getElementById(`feedback-${index}`);
-        if (!input) return;
-        if (input.value.trim().toUpperCase() === String(answer || "").toUpperCase()) {
-          feedback.textContent = " ✅";
-          feedback.className = "correct";
+      originalWords.forEach((answer,index)=>{
+        const input=document.getElementById(`input-${index}`);
+        const feedback=document.getElementById(`feedback-${index}`);
+        if(!input) return;
+        if(input.value.trim().toUpperCase()===String(answer||"").toUpperCase()){
+          feedback.textContent=" ✅";
+          feedback.className="correct";
           correctCount++;
-        } else {
-          feedback.textContent = " ❌";
-          feedback.className = "wrong";
+        }else{
+          feedback.textContent=" ❌";
+          feedback.className="wrong";
         }
       });
 
-      const resultMsg = document.getElementById("result");
-      const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+      const resultMsg=document.getElementById("result");
+      const elapsed = startTime ? Math.floor((Date.now()-startTime)/1000):0;
+      const points = correctCount;
+      const isCorrect = (correctCount===originalWords.length);
 
-      const isCorrect = (correctCount === originalWords.length);
-
-      if (isCorrect) {
-        resultMsg.textContent = "🎉 Parabéns! Você acertou todas!";
-        resultMsg.style.color = "#4CAF50";
-      } else {
-        resultMsg.textContent = `Você acertou ${correctCount} de ${originalWords.length}.`;
-        resultMsg.style.color = "#FFB300";
+      if(isCorrect){
+        resultMsg.textContent="🎉 Parabéns! Você acertou todas!";
+        resultMsg.style.color="#4CAF50";
+      }else{
+        resultMsg.textContent=`Você acertou ${correctCount} de ${originalWords.length}.`;
+        resultMsg.style.color="#FFB300";
       }
 
-      // Envia para backend apenas com sucesso correto
-      try {
-        const username = localStorage.getItem("user");
-        await fetch(SUBMIT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username,
-            challengeDate: todayString(),
-            elapsed,
-            isCorrect
-          })
+      try{
+        const username=localStorage.getItem("user");
+        await fetch(SUBMIT_URL,{
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({username, challengeDate: todayString(), points, elapsed})
         });
-
         setPlayedLocalForUser(username);
-        if (isCorrect) showWinMessage();
+        if(isCorrect) showWinMessage();
         loadRanking();
-      } catch (err) {
+      }catch(err){
         console.error("Erro ao enviar resultado:", err);
       }
     });
@@ -294,26 +414,28 @@
     // =========================
     // Carregar ranking
     // =========================
-    async function loadRanking() {
-      try {
-        const res = await fetch(RANKING_URL);
-        const data = await res.json();
-        document.getElementById("ranking-section").style.display = "flex";
+    async function loadRanking(){
+      try{
+        const res=await fetch(RANKING_URL);
+        const data=await res.json().catch(()=>({daily:[], global:[]}));
 
-        const dailyBody = document.querySelector("#daily-ranking tbody");
-        dailyBody.innerHTML = "";
-        (data.dailyTop || []).forEach((row, idx) => {
-          dailyBody.innerHTML += `<tr><td>${idx+1}</td><td>${row.username}</td><td>${row.points}</td></tr>`;
-        });
+        const dailyTbody=document.querySelector("#daily-ranking tbody");
+        const globalTbody=document.querySelector("#global-ranking tbody");
+        dailyTbody.innerHTML="";
+        globalTbody.innerHTML="";
 
-        const globalBody = document.querySelector("#global-ranking tbody");
-        globalBody.innerHTML = "";
-        (data.overallTotal || []).forEach((row, idx) => {
-          globalBody.innerHTML += `<tr><td>${idx+1}</td><td>${row.username}</td><td>${row.totalPoints}</td></tr>`;
+        (data.daily||[]).forEach((row,index)=>{
+          const tr=document.createElement("tr");
+          tr.innerHTML=`<td>${index+1}</td><td>${row.username}</td><td>${row.points}</td>`;
+          dailyTbody.appendChild(tr);
         });
-      } catch (err) {
-        console.error("Erro ao carregar ranking:", err);
-      }
+        (data.global||[]).forEach((row,index)=>{
+          const tr=document.createElement("tr");
+          tr.innerHTML=`<td>${index+1}</td><td>${row.username}</td><td>${row.points}</td>`;
+          globalTbody.appendChild(tr);
+        });
+        showSection("ranking-section",true);
+      }catch(err){console.error("Erro ao carregar ranking:", err);}
     }
   </script>
 </body>
