@@ -171,19 +171,6 @@ a:hover {
 .game-instructions strong { color: var(--accent-color); font-weight: 700;}
 .game-instructions em { color: var(--primary-color); }
 
-/* Curta (aparece após carregar o desafio) */
-.short-instructions {
-    margin: 15px auto 0;
-    font-size: 0.95rem;
-    color: var(--text-color-light);
-    background: #1b1b1b;
-    border: 1px dashed var(--border-color);
-    border-radius: 8px;
-    padding: 12px 15px;
-    max-width: 700px;
-    display: none; /* Inicia oculto */
-}
-
 /* ==================== */
 /* Tema do desafio      */
 /* ==================== */
