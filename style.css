@@ -162,9 +162,14 @@ input:focus { border: 1px solid #1E88E5; }
   color: #FFD700;
 }
 
-/* Mensagem de bloqueio diário */
+/* Mensagem de bloqueio diário (aplicada se usar #result para bloqueio) */
 .result-message.daily-block {
   color: #FF5252;
+}
+
+/* Mensagem amigável de vitória (rodapé) */
+.result-message.win {
+  color: #4CAF50;
 }
 
 /* ==================== */
