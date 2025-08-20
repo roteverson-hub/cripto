@@ -36,8 +36,8 @@
 
         <!-- 🔹 Tela do Jogo -->
         <div id="game-section" class="content-section">
-            <h1>CRIPTO3 – Desafio Diário</h1>
-            <p id="welcome"></p>
+            <h1 class="main-title">CRIPTO3 – Desafio Diário</h1>
+            <p id="welcome" class="welcome-message"></p>
 
             <!-- aviso de já jogou (banner no topo) -->
             <div id="alreadyPlayedMsg" class="already-played-msg">
@@ -133,6 +133,7 @@
                 el.style.display = "block"; // Apenas para compatibilidade
                 el.classList.add('is-visible');
             }
+            document.getElementById("instructions").style.display = "none";
             document.getElementById("short-instructions").style.display = "none";
             document.getElementById("loadChallenge").style.display = "none";
             document.getElementById("submitAnswers").style.display = "none";
@@ -420,21 +421,19 @@
                 inputs.forEach(input => guessedWord += input.value);
                 
                 const feedbackDiv = document.querySelector(`#challenge .challenge-word:nth-child(${wordIndex + 1})`);
-                const feedbackSpan = document.createElement("span");
                 
+                inputs.forEach((input, i) => {
+                    input.classList.add('animate-feedback');
+                    if (input.value.toUpperCase() === answer[i].toUpperCase()) {
+                        input.classList.add('correct');
+                    } else {
+                        input.classList.add('wrong');
+                    }
+                });
+
                 if (guessedWord.toUpperCase() === String(answer || "").toUpperCase()) {
-                    feedbackSpan.textContent = " ✅";
-                    feedbackSpan.className = "correct";
                     correctCount++;
-                } else {
-                    feedbackSpan.textContent = " ❌";
-                    feedbackSpan.className = "wrong";
                 }
-                
-                // Remove o feedback antigo se existir e adiciona o novo
-                const oldFeedback = feedbackDiv.querySelector(".correct, .wrong");
-                if(oldFeedback) oldFeedback.remove();
-                feedbackDiv.appendChild(feedbackSpan);
             });
 
             const resultMsg = document.getElementById("result");
