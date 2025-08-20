@@ -27,6 +27,24 @@ body {
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
   text-align: center;
   margin-top: 30px;
+  transition: background 0.3s ease;
+}
+
+/* Estado visual quando já jogou */
+.container.already-played {
+  border: 2px solid rgba(229, 83, 83, 0.25);
+}
+
+/* Mensagem grande de já jogou */
+.already-played-msg {
+  margin: 12px auto;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #3a1f1f;
+  color: #FF6B6B;
+  font-weight: bold;
+  border: 1px solid #E53935;
+  display: none;
 }
 
 /* ==================== */
@@ -141,7 +159,7 @@ input:focus { border: 1px solid #1E88E5; }
   font-size: 18px;
   font-weight: bold;
   min-height: 24px;
-  color: #FFD700; /* padrão */
+  color: #FFD700;
 }
 
 /* Mensagem de bloqueio diário */
