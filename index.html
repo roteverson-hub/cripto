@@ -359,15 +359,41 @@
                 originalWords = data.original || [];
                 const challengeDiv = document.getElementById("challenge");
                 challengeDiv.innerHTML = "";
-                (data.words || []).forEach((word, index) => {
-                    const div = document.createElement("div");
-                    div.classList.add("challenge-word");
-                    div.innerHTML = `
-                        <p>${word}</p>
-                        <input type="text" id="input-${index}" placeholder="Digite a palavra correta" />
-                        <span id="feedback-${index}"></span>
-                    `;
-                    challengeDiv.appendChild(div);
+                (data.words || []).forEach((word, wordIndex) => {
+                    const wordDiv = document.createElement("div");
+                    wordDiv.classList.add("challenge-word");
+                    wordDiv.innerHTML = `<p>${word}</p>`;
+
+                    const inputContainer = document.createElement("div");
+                    inputContainer.classList.add("input-container");
+                    
+                    for (let i = 0; i < word.length; i++) {
+                        const input = document.createElement("input");
+                        input.type = "text";
+                        input.maxLength = "1";
+                        input.classList.add("letter-input");
+                        input.setAttribute("data-word-index", wordIndex);
+                        input.setAttribute("data-letter-index", i);
+                        input.addEventListener("input", (e) => {
+                            if (e.target.value) {
+                                const nextInput = document.querySelector(`[data-word-index="${wordIndex}"][data-letter-index="${i + 1}"]`);
+                                if (nextInput) {
+                                    nextInput.focus();
+                                }
+                            }
+                        });
+                        input.addEventListener("keydown", (e) => {
+                            if (e.key === "Backspace" && !e.target.value) {
+                                const prevInput = document.querySelector(`[data-word-index="${wordIndex}"][data-letter-index="${i - 1}"]`);
+                                if (prevInput) {
+                                    prevInput.focus();
+                                }
+                            }
+                        });
+                        inputContainer.appendChild(input);
+                    }
+                    wordDiv.appendChild(inputContainer);
+                    challengeDiv.appendChild(wordDiv);
                 });
                 document.getElementById("instructions").style.display = "none";
                 document.getElementById("short-instructions").style.display = "block";
@@ -388,18 +414,27 @@
         // ==========================================================
         document.getElementById("submitAnswers").addEventListener("click", async () => {
             let correctCount = 0;
-            originalWords.forEach((answer, index) => {
-                const input = document.getElementById(`input-${index}`);
-                const feedback = document.getElementById(`feedback-${index}`);
-                if (!input) return;
-                if (input.value.trim().toUpperCase() === String(answer || "").toUpperCase()) {
-                    feedback.textContent = " ✅";
-                    feedback.className = "correct";
+            originalWords.forEach((answer, wordIndex) => {
+                const inputs = document.querySelectorAll(`[data-word-index="${wordIndex}"]`);
+                let guessedWord = "";
+                inputs.forEach(input => guessedWord += input.value);
+                
+                const feedbackDiv = document.querySelector(`#challenge .challenge-word:nth-child(${wordIndex + 1})`);
+                const feedbackSpan = document.createElement("span");
+                
+                if (guessedWord.toUpperCase() === String(answer || "").toUpperCase()) {
+                    feedbackSpan.textContent = " ✅";
+                    feedbackSpan.className = "correct";
                     correctCount++;
                 } else {
-                    feedback.textContent = " ❌";
-                    feedback.className = "wrong";
+                    feedbackSpan.textContent = " ❌";
+                    feedbackSpan.className = "wrong";
                 }
+                
+                // Remove o feedback antigo se existir e adiciona o novo
+                const oldFeedback = feedbackDiv.querySelector(".correct, .wrong");
+                if(oldFeedback) oldFeedback.remove();
+                feedbackDiv.appendChild(feedbackSpan);
             });
 
             const resultMsg = document.getElementById("result");
