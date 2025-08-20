@@ -1,85 +1,306 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Criptopalavras</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cripto3 - Desafio Diário</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>Criptopalavras 🔐</h1>
 
-    <!-- Mensagem inicial -->
-    <p id="game-description" class="description">
-      Todo dia você recebe três palavras criptografadas.  
-      Todas usam a mesma regra: **cada letra foi trocada por outra**.  
-      Seu objetivo é descobrir as palavras originais.  
-      <br><br>
-      Exemplo:  
-      <code>SVOOL</code> pode ser <code>HELLO</code>.
-    </p>
-
-    <!-- Botão inicial -->
-    <button id="loadChallenge">Carregar Desafio do Dia</button>
-
-    <!-- Área do desafio (inicialmente escondida) -->
-    <div id="challenge-area" class="hidden">
-      <!-- Texto curto depois que o desafio carrega -->
-      <p id="challenge-instructions" class="instructions">
-        Insira abaixo as 3 palavras corretas descriptografadas:
-      </p>
-
-      <div id="challenge"></div>
-      <button id="submitAnswers">Enviar Respostas</button>
+    <!-- 🔹 Tela de Login -->
+    <div id="login-section">
+      <h1>Login</h1>
+      <input type="text" id="login-username" placeholder="Usuário">
+      <input type="password" id="login-password" placeholder="Senha">
+      <button class="btn" id="btnLogin">Entrar</button>
+      <p>Ainda não tem conta? <a href="#" id="goRegister">Registrar</a></p>
+      <p id="loginMsg" class="result-message"></p>
     </div>
 
-    <!-- Ranking -->
-    <h2>Ranking</h2>
-    <div id="ranking">
-      <h3>Ranking Diário</h3>
-      <table id="daily-ranking">
-        <thead>
-          <tr>
-            <th>Usuário</th>
-            <th>Pontos</th>
-            <th>Tentativas</th>
-            <th>Tempo (s)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="4">Nenhum dado ainda</td></tr>
-        </tbody>
-      </table>
+    <!-- 🔹 Tela de Registro -->
+    <div id="register-section" style="display:none;">
+      <h1>Registrar</h1>
+      <input type="text" id="register-username" placeholder="Usuário">
+      <input type="password" id="register-password" placeholder="Senha">
+      <button class="btn" id="btnRegister">Criar Conta</button>
+      <p>Já tem conta? <a href="#" id="goLogin">Login</a></p>
+      <p id="registerMsg" class="result-message"></p>
+    </div>
 
-      <h3>Ranking Geral - Total</h3>
-      <table id="overall-total">
-        <thead>
-          <tr>
-            <th>Usuário</th>
-            <th>Total de Pontos</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="2">Nenhum dado ainda</td></tr>
-        </tbody>
-      </table>
+    <!-- 🔹 Tela do Jogo -->
+    <div id="game-section" style="display:none;">
+      <h1>CRIPTO3 – Desafio Diário</h1>
+      <p id="welcome"></p>
 
-      <h3>Ranking Geral - Melhor Partida</h3>
-      <table id="overall-best">
-        <thead>
-          <tr>
-            <th>Usuário</th>
-            <th>Melhor Pontuação</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="2">Nenhum dado ainda</td></tr>
-        </tbody>
-      </table>
+      <!-- 🔹 Instruções do jogo (mostra antes do desafio) -->
+      <div id="instructions" class="game-instructions">
+        <p>
+          Todo dia liberamos um novo tema com <strong>3 palavras criptografadas</strong>.<br>
+          Você precisa decifrá-las digitando as respostas. <br>
+          Quanto menos tentativas e mais rápido concluir, <strong>maior a sua pontuação</strong>.
+        </p>
+        <p>
+          <em>Exemplo:</em> <strong>"LUA" → "QZE"</strong>. As 3 palavras usam a mesma substituição de letras.
+        </p>
+      </div>
+
+      <p id="theme" class="theme-text"></p>
+
+      <!-- 🔹 Instrução curta (só aparece depois que o desafio é carregado) -->
+      <p id="short-instructions" class="short-instructions" style="display:none;">
+        Insira abaixo as 3 palavras corretas descriptografadas.
+      </p>
+
+      <div id="challenge" class="challenge-container"></div>
+      <button id="loadChallenge" class="btn">Carregar Desafio do Dia</button>
+      <button id="submitAnswers" class="btn" style="display: none;">Enviar Respostas</button>
+      <p id="result" class="result-message"></p>
+      <button id="logout" class="btn btn-danger" style="display:none;">Sair</button>
+
+      <!-- 🔹 Rankings lado a lado -->
+      <div id="ranking-section" class="ranking-flex" style="margin-top:30px; display:none;">
+        <div class="ranking-block">
+          <h2>🏆 Diário</h2>
+          <table id="daily-ranking" class="ranking-table">
+            <thead>
+              <tr><th>#</th><th>Usuário</th><th>Pontos</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="ranking-block">
+          <h2>🌍 Global</h2>
+          <table id="global-ranking" class="ranking-table">
+            <thead>
+              <tr><th>#</th><th>Usuário</th><th>Pontos</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    // 🔹 Endpoints
+    const CHALLENGE_URL = "/api/challenge";
+    const LOGIN_URL = "/api/login";
+    const REGISTER_URL = "/api/register";
+    const SUBMIT_URL = "/api/submit";
+    const RANKING_URL = "/api/ranking";
+
+    let originalWords = [];
+    let startTime = null;
+
+    // =========================
+    // 🔹 Persistência de Login
+    // =========================
+    function checkLogin() {
+      const user = localStorage.getItem("user");
+      if (user) {
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("register-section").style.display = "none";
+        document.getElementById("game-section").style.display = "block";
+        document.getElementById("welcome").textContent = `👋 Bem-vindo, ${user}!`;
+        document.getElementById("logout").style.display = "block";
+        loadRanking();
+      }
+    }
+    checkLogin();
+
+    document.getElementById("logout").addEventListener("click", () => {
+      localStorage.removeItem("user");
+      location.reload();
+    });
+
+    // =========================
+    // 🔹 Troca de Telas
+    // =========================
+    document.getElementById("goRegister").addEventListener("click", () => {
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("register-section").style.display = "block";
+    });
+    document.getElementById("goLogin").addEventListener("click", () => {
+      document.getElementById("register-section").style.display = "none";
+      document.getElementById("login-section").style.display = "block";
+    });
+
+    // =========================
+    // 🔹 Registro
+    // =========================
+    document.getElementById("btnRegister").addEventListener("click", async () => {
+      const username = document.getElementById("register-username").value;
+      const password = document.getElementById("register-password").value;
+      try {
+        const res = await fetch(REGISTER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        document.getElementById("registerMsg").textContent = data.message;
+        if (data.success) {
+          document.getElementById("register-section").style.display = "none";
+          document.getElementById("login-section").style.display = "block";
+        }
+      } catch (err) {
+        document.getElementById("registerMsg").textContent = "Erro ao registrar.";
+      }
+    });
+
+    // =========================
+    // 🔹 Login
+    // =========================
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      const username = document.getElementById("login-username").value;
+      const password = document.getElementById("login-password").value;
+      try {
+        const res = await fetch(LOGIN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        document.getElementById("loginMsg").textContent = data.message;
+        if (data.success) {
+          localStorage.setItem("user", username);
+          document.getElementById("login-section").style.display = "none";
+          document.getElementById("game-section").style.display = "block";
+          document.getElementById("welcome").textContent = `👋 Bem-vindo, ${username}!`;
+          document.getElementById("logout").style.display = "block";
+          loadRanking();
+        }
+      } catch (err) {
+        document.getElementById("loginMsg").textContent = "Erro ao logar.";
+      }
+    });
+
+    // =========================
+    // 🔹 Carregar Desafio
+    // =========================
+    document.getElementById('loadChallenge').addEventListener('click', async () => {
+      try {
+        const response = await fetch(CHALLENGE_URL);
+        const data = await response.json();
+
+        // Tema + palavras originais (para validação)
+        document.getElementById('theme').textContent = `Tema: ${data.theme}`;
+        originalWords = data.original;
+
+        // Monta a UI do desafio
+        const challengeDiv = document.getElementById('challenge');
+        challengeDiv.innerHTML = '';
+        data.words.forEach((word, index) => {
+          const div = document.createElement('div');
+          div.classList.add('challenge-word');
+          div.innerHTML = `
+            <p>${word}</p>
+            <input type="text" id="input-${index}" placeholder="Digite a palavra correta">
+            <span id="feedback-${index}"></span>
+          `;
+          challengeDiv.appendChild(div);
+        });
+
+        // Troca de mensagens (longa some, curta aparece)
+        const longMsg = document.getElementById('instructions');
+        const shortMsg = document.getElementById('short-instructions');
+        if (longMsg) longMsg.style.display = 'none';
+        if (shortMsg) shortMsg.style.display = 'block';
+
+        // Botões / estados
+        document.getElementById('loadChallenge').style.display = "none";
+        document.getElementById('submitAnswers').style.display = "block";
+        document.getElementById('result').textContent = "";
+        startTime = Date.now();
+
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao carregar desafio do dia.");
+      }
+    });
+
+    // =========================
+    // 🔹 Verificar Respostas + Enviar Ranking
+    // =========================
+    document.getElementById('submitAnswers').addEventListener('click', async () => {
+      let correctCount = 0;
+      originalWords.forEach((answer, index) => {
+        const input = document.getElementById(`input-${index}`);
+        const feedback = document.getElementById(`feedback-${index}`);
+        if (input.value.trim().toUpperCase() === answer.toUpperCase()) {
+          feedback.textContent = " ✅";
+          feedback.className = "correct";
+          correctCount++;
+        } else {
+          feedback.textContent = " ❌";
+          feedback.className = "wrong";
+        }
+      });
+
+      const resultMsg = document.getElementById("result");
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const points = correctCount;
+
+      if (correctCount === originalWords.length) {
+        resultMsg.textContent = "🎉 Parabéns! Você acertou todas!";
+        resultMsg.style.color = "#4CAF50";
+      } else {
+        resultMsg.textContent = `Você acertou ${correctCount} de ${originalWords.length}.`;
+        resultMsg.style.color = "#FFB300";
+      }
+
+      // Envia resultado ao backend
+      try {
+        const username = localStorage.getItem("user");
+        await fetch(SUBMIT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username,
+            challengeDate: new Date().toISOString().split("T")[0],
+            points,
+            attempts: originalWords.length,
+            elapsed
+          })
+        });
+        loadRanking();
+      } catch (err) {
+        console.error("Erro ao enviar resultado:", err);
+      }
+    });
+
+    // =========================
+    // 🔹 Carregar Ranking
+    // =========================
+    async function loadRanking() {
+      try {
+        const res = await fetch(RANKING_URL);
+        const data = await res.json();
+        document.getElementById("ranking-section").style.display = "flex";
+
+        // Diário
+        const dailyBody = document.querySelector("#daily-ranking tbody");
+        dailyBody.innerHTML = "";
+        (data.dailyTop || []).forEach((row, idx) => {
+          dailyBody.innerHTML += `<tr>
+            <td>${idx+1}</td><td>${row.username}</td><td>${row.points}</td>
+          </tr>`;
+        });
+
+        // Global
+        const globalBody = document.querySelector("#global-ranking tbody");
+        globalBody.innerHTML = "";
+        (data.overallTotal || []).forEach((row, idx) => {
+          globalBody.innerHTML += `<tr>
+            <td>${idx+1}</td><td>${row.username}</td><td>${row.totalPoints}</td>
+          </tr>`;
+        });
+      } catch (err) {
+        console.error("Erro ao carregar ranking:", err);
+      }
+    }
+  </script>
 </body>
 </html>
