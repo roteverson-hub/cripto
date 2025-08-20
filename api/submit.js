@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       try { body = JSON.parse(body); } catch {}
     }
 
-    const { username, challengeDate, points, attempts, elapsed } = body;
+    const { username, challengeDate, elapsed, isCorrect } = body;
 
     const URL_RANKING = process.env.URL_RANKING || '';
 
@@ -32,15 +32,25 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'URL_RANKING não configurada' });
     }
 
+    // Envia success = true somente se o usuário acertou todas as palavras
     const forward = await fetch(URL_RANKING, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, challengeDate, points, attempts, elapsed }),
+      body: JSON.stringify({
+        username,
+        challengeDate,
+        elapsed,
+        success: !!isCorrect
+      }),
     });
 
     const text = await forward.text();
     let data;
-    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    try { 
+      data = JSON.parse(text); 
+    } catch { 
+      data = { raw: text }; 
+    }
 
     res.status(forward.ok ? 200 : forward.status).json(data);
   } catch (err) {
