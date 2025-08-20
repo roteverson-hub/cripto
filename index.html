@@ -448,20 +448,26 @@
                 let guessedWord = "";
                 inputs.forEach(input => guessedWord += input.value);
                 
-                const feedbackDiv = document.querySelector(`#challenge .challenge-word:nth-child(${wordIndex + 1})`);
+                // Determine if the entire word is correct
+                const isWordCorrect = guessedWord.toUpperCase() === String(answer || "").toUpperCase();
                 
-                inputs.forEach((input, i) => {
+                // Add to correct count if the word is correct
+                if (isWordCorrect) {
+                    correctCount++;
+                }
+
+                // Apply feedback to all inputs of the word based on the overall correctness
+                inputs.forEach(input => {
                     input.classList.add('animate-feedback');
-                    if (input.value.toUpperCase() === answer[i].toUpperCase()) {
+                    // Remove existing feedback classes first
+                    input.classList.remove('correct', 'wrong');
+                    
+                    if (isWordCorrect) {
                         input.classList.add('correct');
                     } else {
                         input.classList.add('wrong');
                     }
                 });
-
-                if (guessedWord.toUpperCase() === String(answer || "").toUpperCase()) {
-                    correctCount++;
-                }
             });
 
             const resultMsg = document.getElementById("result");
