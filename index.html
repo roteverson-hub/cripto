@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Cripto3 - Desafio Diário</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="appContainer">
 
     <!-- 🔹 Tela de Login -->
     <div id="login-section">
       <h1>Login</h1>
-      <input type="text" id="login-username" placeholder="Usuário">
-      <input type="password" id="login-password" placeholder="Senha">
+      <input type="text" id="login-username" placeholder="Usuário" />
+      <input type="password" id="login-password" placeholder="Senha" />
       <button class="btn" id="btnLogin">Entrar</button>
       <p>Ainda não tem conta? <a href="#" id="goRegister">Registrar</a></p>
       <p id="loginMsg" class="result-message"></p>
@@ -22,8 +22,8 @@
     <!-- 🔹 Tela de Registro -->
     <div id="register-section" style="display:none;">
       <h1>Registrar</h1>
-      <input type="text" id="register-username" placeholder="Usuário">
-      <input type="password" id="register-password" placeholder="Senha">
+      <input type="text" id="register-username" placeholder="Usuário" />
+      <input type="password" id="register-password" placeholder="Senha" />
       <button class="btn" id="btnRegister">Criar Conta</button>
       <p>Já tem conta? <a href="#" id="goLogin">Login</a></p>
       <p id="registerMsg" class="result-message"></p>
@@ -34,11 +34,16 @@
       <h1>CRIPTO3 – Desafio Diário</h1>
       <p id="welcome"></p>
 
+      <!-- aviso de já jogou -->
+      <div id="alreadyPlayedMsg" class="already-played-msg" style="display:none;">
+        ⚠️ Você já completou o desafio de hoje. Volte amanhã.
+      </div>
+
       <!-- 🔹 Instruções do jogo (mostra antes do desafio) -->
       <div id="instructions" class="game-instructions">
         <p>
-          Todo dia liberamos um novo tema com <strong>3 palavras criptografadas</strong>.<br>
-          Você precisa decifrá-las digitando as respostas. <br>
+          Todo dia liberamos um novo tema com <strong>3 palavras criptografadas</strong>.<br />
+          Você precisa decifrá-las digitando as respostas.<br />
           Quanto menos tentativas e mais rápido concluir, <strong>maior a sua pontuação</strong>.
         </p>
         <p>
@@ -84,7 +89,7 @@
   </div>
 
   <script>
-    // 🔹 Endpoints
+    // Endpoints
     const CHALLENGE_URL = "/api/challenge";
     const LOGIN_URL = "/api/login";
     const REGISTER_URL = "/api/register";
@@ -94,11 +99,10 @@
     let originalWords = [];
     let startTime = null;
 
-    // ========= Helpers =========
+    // Helpers UI
     function showSection(id, visible) {
       document.getElementById(id).style.display = visible ? "block" : "none";
     }
-
     function showGameUI(user) {
       showSection("login-section", false);
       showSection("register-section", false);
@@ -108,85 +112,113 @@
       loadRanking();
     }
 
-    function showDailyBlock() {
-      const resultMsg = document.getElementById("result");
-      resultMsg.textContent = "⚠️ Você já completou o desafio de hoje! Volte amanhã.";
-      resultMsg.classList.add("daily-block");
-      resultMsg.style.color = ""; // evita sobrescrever a classe
-      document.getElementById("submitAnswers").style.display = "none";
-      document.getElementById("loadChallenge").style.display = "none";
+    function showDailyBlockForUser(username) {
+      document.getElementById("result").textContent = "⚠️ Você já completou o desafio de hoje! Volte amanhã.";
+      document.getElementById("result").classList.add("daily-block");
       document.getElementById("short-instructions").style.display = "none";
+      document.getElementById("loadChallenge").style.display = "none";
+      document.getElementById("submitAnswers").style.display = "none";
+
+      // visual adicional
+      document.querySelector(".container")?.classList.add("already-played");
+      const el = document.getElementById("alreadyPlayedMsg");
+      if (el) el.style.display = "block";
     }
 
-    function clearDailyBlock() {
+    function clearDailyBlockUI() {
       const resultMsg = document.getElementById("result");
       resultMsg.classList.remove("daily-block");
       resultMsg.textContent = "";
       resultMsg.style.color = "";
+      document.querySelector(".container")?.classList.remove("already-played");
+      const el = document.getElementById("alreadyPlayedMsg");
+      if (el) el.style.display = "none";
     }
 
-    async function syncServerMemoryIntoLocalStorage() {
-      // Se o servidor lembrou do usuário via cookie, sincroniza no localStorage
-      try {
-        const res = await fetch(LOGIN_URL, { method: "GET" });
-        const data = await res.json();
-        if (data?.logged && data?.username && !localStorage.getItem("user")) {
-          localStorage.setItem("user", data.username);
-        }
-      } catch {}
+    function todayString() {
+      return new Date().toISOString().split("T")[0];
     }
 
-    async function checkDoneTodayAndMaybeBlock(user) {
-      try {
-        const url = `${CHALLENGE_URL}?username=${encodeURIComponent(user)}&statusOnly=1`;
-        const res = await fetch(url);
-        const data = await res.json();
-        const done = data?.doneToday ?? data?.alreadyCompletedToday ?? false;
-        if (done) showDailyBlock();
-      } catch {}
+    function setPlayedLocalForUser(username) {
+      if (!username) return;
+      localStorage.setItem(`playedDate:${username}`, todayString());
+    }
+
+    function hasPlayedLocalForUser(username) {
+      if (!username) return false;
+      return localStorage.getItem(`playedDate:${username}`) === todayString();
     }
 
     // =========================
-    // 🔹 Persistência de Login
+    // Persistência / Sincronização
     // =========================
     async function checkLogin() {
-      await syncServerMemoryIntoLocalStorage();
+      try {
+        const res = await fetch(LOGIN_URL);
+        const data = await res.json().catch(() => ({}));
 
-      const user = localStorage.getItem("user");
-      if (user) {
-        showGameUI(user);
-        // Checa se já fez hoje (caso já estivesse logado pela memória do servidor)
-        checkDoneTodayAndMaybeBlock(user);
-      } else {
+        if (data.logged && data.username) {
+          // grava usuário local (não remove playedDate)
+          if (!localStorage.getItem("user")) localStorage.setItem("user", data.username);
+
+          showGameUI(data.username);
+
+          // prioridade: local playedDate per-user (imediato)
+          if (hasPlayedLocalForUser(data.username)) {
+            showDailyBlockForUser(data.username);
+            return;
+          }
+
+          // depois: servidor (ranking) resposta
+          if (data.alreadyCompletedToday) {
+            // marca local e bloqueia
+            setPlayedLocalForUser(data.username);
+            showDailyBlockForUser(data.username);
+            return;
+          }
+
+          // limpo UI
+          clearDailyBlockUI();
+        } else {
+          showSection("login-section", true);
+        }
+      } catch (err) {
+        console.error("checkLogin error:", err);
         showSection("login-section", true);
       }
     }
     checkLogin();
 
-    document.getElementById("logout").addEventListener("click", () => {
+    // Logout -> limpa cookie no servidor (DELETE), e limpa user local (mas mantém playedDate:<user>)
+    document.getElementById("logout").addEventListener("click", async () => {
+      try {
+        await fetch(LOGIN_URL, { method: "DELETE" });
+      } catch (err) {
+        console.error("logout request failed", err);
+      }
+      // remove apenas a sessão do usuário (não removemos playedDate:<user>)
       localStorage.removeItem("user");
-      // limpa visual
+      // limpa tela e volta ao login
       document.getElementById("challenge").innerHTML = "";
       document.getElementById("theme").textContent = "";
-      clearDailyBlock();
+      clearDailyBlockUI();
+      // força reload para limpar estados
       location.reload();
     });
 
-    // =========================
-    // 🔹 Troca de Telas
-    // =========================
-    document.getElementById("goRegister").addEventListener("click", () => {
+    // Troca telas
+    document.getElementById("goRegister").addEventListener("click", (e) => {
+      e.preventDefault();
       showSection("login-section", false);
       showSection("register-section", true);
     });
-    document.getElementById("goLogin").addEventListener("click", () => {
+    document.getElementById("goLogin").addEventListener("click", (e) => {
+      e.preventDefault();
       showSection("register-section", false);
       showSection("login-section", true);
     });
 
-    // =========================
-    // 🔹 Registro
-    // =========================
+    // Registro
     document.getElementById("btnRegister").addEventListener("click", async () => {
       const username = document.getElementById("register-username").value.trim();
       const password = document.getElementById("register-password").value;
@@ -202,14 +234,12 @@
           showSection("register-section", false);
           showSection("login-section", true);
         }
-      } catch {
+      } catch (err) {
         document.getElementById("registerMsg").textContent = "Erro ao registrar.";
       }
     });
 
-    // =========================
-    // 🔹 Login
-    // =========================
+    // Login
     document.getElementById("btnLogin").addEventListener("click", async () => {
       const username = document.getElementById("login-username").value.trim();
       const password = document.getElementById("login-password").value;
@@ -223,87 +253,94 @@
         document.getElementById("loginMsg").textContent = data.message || "";
 
         if (data.success) {
+          // grava user local
           localStorage.setItem("user", username);
           showGameUI(username);
 
-          // Se o Apps Script já indicou que fez hoje, bloqueia já
-          const already = data?.alreadyCompletedToday === true;
-          if (already) {
-            showDailyBlock();
+          // se servidor diz que já completou, bloqueia e marca local
+          if (data.alreadyCompletedToday) {
+            setPlayedLocalForUser(username);
+            showDailyBlockForUser(username);
           } else {
-            clearDailyBlock();
+            clearDailyBlockUI();
             document.getElementById("loadChallenge").style.display = "block";
           }
         }
-      } catch {
+      } catch (err) {
+        console.error("login error:", err);
         document.getElementById("loginMsg").textContent = "Erro ao logar.";
       }
     });
 
-    // =========================
-    // 🔹 Carregar Desafio
-    // =========================
-    document.getElementById('loadChallenge').addEventListener('click', async () => {
+    // Carregar Desafio (verifica estado servidor + local antes)
+    document.getElementById("loadChallenge").addEventListener("click", async () => {
       const username = localStorage.getItem("user");
       if (!username) return;
 
-      try {
-        // **Importante**: enviar o username para o backend poder checar se já fez hoje
-        const response = await fetch(`${CHALLENGE_URL}?username=${encodeURIComponent(username)}`);
-        const data = await response.json();
+      // checa local imediato (previne replays antes do ranking propagar)
+      if (hasPlayedLocalForUser(username)) {
+        showDailyBlockForUser(username);
+        return;
+      }
 
-        // Se backend disser que já fez hoje, bloqueia
-        const done = data?.doneToday ?? data?.alreadyCompletedToday ?? false;
-        if (done) {
-          showDailyBlock();
+      // checa servidor via /api/login (GET) - autoritativo
+      try {
+        const statusRes = await fetch(LOGIN_URL);
+        const status = await statusRes.json().catch(() => ({}));
+        if (status.logged && status.username === username && status.alreadyCompletedToday) {
+          setPlayedLocalForUser(username);
+          showDailyBlockForUser(username);
           return;
         }
+      } catch (err) {
+        console.warn("status check failed (non-fatal):", err);
+      }
 
-        // Tema + palavras originais (para validação)
-        document.getElementById('theme').textContent = `Tema: ${data.theme}`;
+      // se liberado, pega desafio normal
+      try {
+        const response = await fetch(CHALLENGE_URL);
+        const data = await response.json();
+
+        document.getElementById("theme").textContent = `Tema: ${data.theme || ""}`;
         originalWords = data.original || [];
 
-        // Monta a UI do desafio
-        const challengeDiv = document.getElementById('challenge');
-        challengeDiv.innerHTML = '';
+        const challengeDiv = document.getElementById("challenge");
+        challengeDiv.innerHTML = "";
         (data.words || []).forEach((word, index) => {
-          const div = document.createElement('div');
-          div.classList.add('challenge-word');
+          const div = document.createElement("div");
+          div.classList.add("challenge-word");
           div.innerHTML = `
             <p>${word}</p>
-            <input type="text" id="input-${index}" placeholder="Digite a palavra correta">
+            <input type="text" id="input-${index}" placeholder="Digite a palavra correta" />
             <span id="feedback-${index}"></span>
           `;
           challengeDiv.appendChild(div);
         });
 
-        // Troca de mensagens (longa some, curta aparece)
-        const longMsg = document.getElementById('instructions');
-        const shortMsg = document.getElementById('short-instructions');
-        if (longMsg) longMsg.style.display = 'none';
-        if (shortMsg) shortMsg.style.display = 'block';
+        // UI changes
+        const longMsg = document.getElementById("instructions");
+        const shortMsg = document.getElementById("short-instructions");
+        if (longMsg) longMsg.style.display = "none";
+        if (shortMsg) shortMsg.style.display = "block";
 
-        // Botões / estados
-        document.getElementById('loadChallenge').style.display = "none";
-        document.getElementById('submitAnswers').style.display = "block";
-        clearDailyBlock();
-        document.getElementById('result').textContent = "";
+        document.getElementById("loadChallenge").style.display = "none";
+        document.getElementById("submitAnswers").style.display = "block";
+        clearDailyBlockUI();
+        document.getElementById("result").textContent = "";
         startTime = Date.now();
-
       } catch (err) {
-        console.error(err);
+        console.error("Erro ao carregar desafio:", err);
         alert("Erro ao carregar desafio do dia.");
       }
     });
 
-    // =========================
-    // 🔹 Verificar Respostas + Enviar Ranking
-    // =========================
-    document.getElementById('submitAnswers').addEventListener('click', async () => {
+    // Verificar Respostas + Enviar Ranking
+    document.getElementById("submitAnswers").addEventListener("click", async () => {
       let correctCount = 0;
       originalWords.forEach((answer, index) => {
         const input = document.getElementById(`input-${index}`);
         const feedback = document.getElementById(`feedback-${index}`);
+        if (!input) return;
         if (input.value.trim().toUpperCase() === String(answer || "").toUpperCase()) {
           feedback.textContent = " ✅";
           feedback.className = "correct";
@@ -315,7 +352,7 @@
       });
 
       const resultMsg = document.getElementById("result");
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
       const points = correctCount;
 
       if (correctCount === originalWords.length) {
@@ -326,32 +363,35 @@
         resultMsg.style.color = "#FFB300";
       }
 
-      // Envia resultado ao backend
+      // envia para backend e bloqueia localmente
       try {
         const username = localStorage.getItem("user");
+        const payload = {
+          username,
+          challengeDate: new Date().toISOString().split("T")[0],
+          points,
+          attempts: originalWords.length,
+          elapsed
+        };
+
         await fetch(SUBMIT_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username,
-            challengeDate: new Date().toISOString().split("T")[0],
-            points,
-            attempts: originalWords.length,
-            elapsed
-          })
+          body: JSON.stringify(payload)
         });
 
-        // Após enviar, bloqueia nova tentativa localmente
-        showDailyBlock();
+        // marca localmente (prevenção imediata)
+        setPlayedLocalForUser(username);
+        showDailyBlockForUser(username);
+
+        // atualiza ranking
         loadRanking();
       } catch (err) {
         console.error("Erro ao enviar resultado:", err);
       }
     });
 
-    // =========================
-    // 🔹 Carregar Ranking
-    // =========================
+    // Carregar Ranking
     async function loadRanking() {
       try {
         const res = await fetch(RANKING_URL);
