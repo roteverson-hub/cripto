@@ -58,9 +58,6 @@
 
             <p id="theme" class="theme-text"></p>
 
-            <!-- 🔹 Instrução curta (só aparece depois que o desafio é carregado) -->
-            <p id="short-instructions" class="short-instructions"></p>
-
             <div id="challenge" class="challenge-container"></div>
             <button id="loadChallenge" class="btn">Carregar Desafio do Dia</button>
             <button id="submitAnswers" class="btn" style="display: none;">Enviar Respostas</button>
@@ -134,7 +131,6 @@
                 el.classList.add('is-visible');
             }
             document.getElementById("instructions").style.display = "none";
-            document.getElementById("short-instructions").style.display = "none";
             document.getElementById("loadChallenge").style.display = "none";
             document.getElementById("submitAnswers").style.display = "none";
             const resultMsg = document.getElementById("result");
@@ -169,7 +165,6 @@
             resultMsg.textContent = "Parabéns, você completou o desafio de hoje. Volte amanhã para solucionar mais um.";
             document.getElementById("loadChallenge").style.display = "none";
             document.getElementById("submitAnswers").style.display = "none";
-            document.getElementById("short-instructions").style.display = "none";
             document.querySelector(".container")?.classList.add("already-played");
         }
 
@@ -397,8 +392,6 @@
                     challengeDiv.appendChild(wordDiv);
                 });
                 document.getElementById("instructions").style.display = "none";
-                document.getElementById("short-instructions").style.display = "block";
-                document.getElementById("short-instructions").textContent = "Insira abaixo as 3 palavras corretas descriptografadas.";
                 document.getElementById("loadChallenge").style.display = "none";
                 document.getElementById("submitAnswers").style.display = "block";
                 clearDailyBlockUI();
