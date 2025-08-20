@@ -238,8 +238,8 @@ a:hover {
 /* Palavras do desafio  */
 /* ==================== */
 .challenge-container {
-    display: flex; /* Mudança para flexbox */
-    flex-wrap: wrap; /* Permite que os itens se quebrem em novas linhas */
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
 }
@@ -251,14 +251,16 @@ a:hover {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 2px 10px var(--shadow);
-    flex: 1 1 300px; /* Adapta-se para quebrar a linha */
+    flex: 1 1 300px;
 }
 .challenge-word p {
-    font-size: 1.8rem; /* Aumentado para 1.8rem */
-    letter-spacing: 0.2rem; /* Aumentado para 0.2rem */
+    font-size: 1.8rem;
+    letter-spacing: 0.2rem;
     margin-bottom: 0.8rem;
     color: var(--primary-color);
     font-weight: 700;
+    overflow-wrap: break-word; /* Prevents overflow on long words */
+    word-break: break-all;
 }
 
 /* Contêiner de inputs de letra */
@@ -267,6 +269,7 @@ a:hover {
     justify-content: center;
     gap: 8px;
     margin-top: 10px;
+    flex-wrap: wrap; /* Added to handle long words */
 }
 
 .letter-input {
@@ -390,5 +393,11 @@ a:hover {
     .challenge-word p { font-size: 1.2rem; }
     .btn { font-size: 14px; padding: 12px; }
     .ranking-block { flex: 1 1 100%; }
-    .letter-input { width: 35px; height: 35px; font-size: 1.2rem; }
+
+    /* Ajuste para as caixas de input para se adaptarem em telas menores */
+    .letter-input {
+        width: 35px;
+        height: 35px;
+        font-size: 1.2rem;
+    }
 }
