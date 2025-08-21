@@ -4,28 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Encrypta - Desafio Diário</title>
-    <!-- Fonte "Inter" do Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Link para o arquivo CSS externo -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Overlay de Carregamento -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="spinner"></div>
     </div>
 
     <div class="container" id="appContainer">
 
-        <!-- 🔹 Título do Jogo nas telas de Login/Registro -->
         <div class="game-intro">
             <h1 class="main-title">ENCRYPTA</h1>
             <p>O jogo diário de palavras criptografadas</p>
         </div>
 
-        <!-- 🔹 Tela de Login -->
         <div id="login-section" class="content-section is-visible">
             <h2>Entrar</h2>
             <input type="text" id="login-username" placeholder="Usuário" />
@@ -35,7 +30,6 @@
             <p id="loginMsg" class="result-message"></p>
         </div>
 
-        <!-- 🔹 Tela de Registro -->
         <div id="register-section" class="content-section">
             <h2>Registrar</h2>
             <input type="text" id="register-username" placeholder="Usuário" />
@@ -45,17 +39,14 @@
             <p id="registerMsg" class="result-message"></p>
         </div>
 
-        <!-- 🔹 Tela do Jogo -->
         <div id="game-section" class="content-section">
             <h1 class="main-title">ENCRYPTA – Desafio Diário</h1>
             <p id="welcome" class="welcome-message"></p>
 
-            <!-- aviso de já jogou (banner no topo) -->
             <div id="alreadyPlayedMsg" class="already-played-msg">
                 ⚠️ Você já completou o desafio de hoje. Volte amanhã.
             </div>
 
-            <!-- 🔹 Instruções do jogo (mostra antes do desafio) -->
             <div id="instructions" class="game-instructions">
                 <p>
                     Todo dia liberamos um novo tema com <strong>3 palavras criptografadas</strong>.<br />
@@ -75,7 +66,6 @@
             <p id="result" class="result-message"></p>
             <button id="logout" class="btn btn-danger" style="display:none;">Sair</button>
 
-            <!-- 🔹 Rankings lado a lado -->
             <div id="ranking-section" class="ranking-flex">
                 <div class="ranking-block">
                     <h2>🏆 Diário</h2>
@@ -112,6 +102,19 @@
 
         let originalWords = [];
         let startTime = null;
+
+        // ===== INÍCIO DA ALTERAÇÃO =====
+        /**
+         * Normaliza uma string, removendo acentos e caracteres especiais.
+         * Ex: "Pão" -> "Pao"
+         * @param {string} str A string para normalizar.
+         * @returns {string} A string normalizada.
+         */
+        function normalizeString(str) {
+            if (!str) return "";
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+        // ===== FIM DA ALTERAÇÃO =====
 
         // Funções para mostrar/esconder o loading overlay
         function showLoading() {
@@ -448,8 +451,12 @@
                 let guessedWord = "";
                 inputs.forEach(input => guessedWord += input.value);
                 
-                // Determine if the entire word is correct
-                const isWordCorrect = guessedWord.toUpperCase() === String(answer || "").toUpperCase();
+                // ===== INÍCIO DA ALTERAÇÃO =====
+                // Normaliza ambas as strings antes de comparar
+                const normalizedGuessedWord = normalizeString(guessedWord).toUpperCase();
+                const normalizedAnswer = normalizeString(String(answer || "")).toUpperCase();
+                const isWordCorrect = normalizedGuessedWord === normalizedAnswer;
+                // ===== FIM DA ALTERAÇÃO =====
                 
                 // Add to correct count if the word is correct
                 if (isWordCorrect) {
