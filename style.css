@@ -344,12 +344,12 @@ a:hover {
     justify-content: center;
     flex-wrap: wrap;
     margin-top: 30px;
-    display: none;
+    /* AQUI ESTAVA O PROBLEMA! A linha 'display: none;' foi removida. */
 }
 
 .ranking-block {
     flex: 1 1 45%;
-    min-width: 300px; /* Garante que não ficam muito estreitos */
+    min-width: 300px;
 }
 .ranking-block h2 {
     font-size: 1.5rem;
@@ -366,6 +366,15 @@ a:hover {
     overflow: hidden;
     box-shadow: 0 4px 15px var(--shadow);
 }
+/* Altera o estilo do cabeçalho da tabela para uma borda mais visível e centralizada */
+.ranking-table thead th {
+    background: #333;
+    font-weight: 700;
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--accent-color);
+    padding: 15px 12px;
+    text-align: center; /* Centraliza o texto do cabeçalho */
+}
 
 .ranking-table th, .ranking-table td {
     padding: 12px;
@@ -373,12 +382,6 @@ a:hover {
     text-align: left;
 }
 .ranking-table th:first-child, .ranking-table td:first-child { text-align: center; width: 40px; }
-
-.ranking-table th {
-    background: #333;
-    font-weight: 700;
-    color: var(--accent-color);
-}
 
 .ranking-table tr:nth-child(even) { background: #242424; }
 .ranking-table tr:hover { background: #3a3a3a; }
